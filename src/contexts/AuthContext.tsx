@@ -3,10 +3,11 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from "@/components/ui/use-toast";
 import { createClient } from '@supabase/supabase-js';
 
-// Initialize Supabase client
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Initialize Supabase client with fallbacks for development
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://your-project-url.supabase.co';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'your-anon-key';
 
+// Create the Supabase client
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 interface User {
@@ -54,12 +55,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             return;
           }
           
-          // Set user state with profile data
+          // Set user state with profile data - ensure role is either 'customer' or 'admin'
           setUser({
             id: session.user.id,
             name: profile.name || session.user.email?.split('@')[0] || 'User',
             email: session.user.email || '',
-            role: profile.role || 'customer',
+            role: (profile.role === 'admin' ? 'admin' : 'customer') as 'customer' | 'admin',
             points: profile.points || 0
           });
         }
@@ -89,7 +90,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               id: session.user.id,
               name: profile.name || session.user.email?.split('@')[0] || 'User',
               email: session.user.email || '',
-              role: profile.role || 'customer',
+              role: (profile.role === 'admin' ? 'admin' : 'customer') as 'customer' | 'admin',
               points: profile.points || 0
             });
           } else {
@@ -98,7 +99,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               id: session.user.id,
               name: session.user.email?.split('@')[0] || 'User',
               email: session.user.email,
-              role: 'customer',
+              role: 'customer' as 'customer' | 'admin',
               points: 50 // Welcome bonus
             };
             
