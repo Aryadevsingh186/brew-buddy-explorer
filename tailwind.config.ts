@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,6 +62,14 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				// Coffee theme colors
+				coffee: {
+					rich: '#6F4E37',    // Rich Brown
+					cream: '#FFFDD0',   // Cream
+					mocha: '#967259',   // Mocha
+					espresso: '#4A3728', // Espresso
+					caramel: '#C68E17'   // Caramel
 				}
 			},
 			borderRadius: {
@@ -84,11 +93,16 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'steam': {
+					'0%, 100%': { opacity: '0.3', transform: 'translateY(0)' },
+					'50%': { opacity: '1', transform: 'translateY(-10px)' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'steam': 'steam 2s ease-in-out infinite'
 			}
 		}
 	},
