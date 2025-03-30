@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { Coffee, Sparkles, MilkShake, CupSoda, PlantIcon } from 'lucide-react';
+import { Coffee, Sparkles, CupSoda, Leaf, Milk } from 'lucide-react';
 import { toast } from "@/components/ui/use-toast";
 
 // Types
@@ -164,8 +164,8 @@ const Menu: React.FC = () => {
   const getCategoryIcon = (category: string) => {
     switch (category) {
       case 'coffee': return <Coffee className="h-4 w-4" />;
-      case 'tea': return <PlantIcon className="h-4 w-4" />;
-      case 'smoothie': return <MilkShake className="h-4 w-4" />;
+      case 'tea': return <Leaf className="h-4 w-4" />;
+      case 'smoothie': return <Milk className="h-4 w-4" />;
       case 'refreshment': return <CupSoda className="h-4 w-4" />;
       default: return <Coffee className="h-4 w-4" />;
     }
@@ -191,11 +191,11 @@ const Menu: React.FC = () => {
             <span>Coffee</span>
           </TabsTrigger>
           <TabsTrigger value="tea" className="flex items-center gap-1">
-            <PlantIcon className="h-4 w-4" />
+            <Leaf className="h-4 w-4" />
             <span>Tea</span>
           </TabsTrigger>
           <TabsTrigger value="smoothie" className="flex items-center gap-1">
-            <MilkShake className="h-4 w-4" />
+            <Milk className="h-4 w-4" />
             <span>Smoothies</span>
           </TabsTrigger>
           <TabsTrigger value="refreshment" className="flex items-center gap-1">

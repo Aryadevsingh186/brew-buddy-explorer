@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -12,15 +11,11 @@ const QRScanner: React.FC = () => {
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [scannedCode, setScannedCode] = useState<string | null>(null);
   
-  // Simulate QR scanning functionality
   const startScanning = async () => {
     try {
-      // In a real app, we would request camera permissions
-      // and initialize a QR scanning library
       setHasCameraPermission(true);
       setScanning(true);
       
-      // Simulate a scan after 3 seconds
       setTimeout(() => {
         const codes = [
           'REWARD50',
@@ -33,7 +28,6 @@ const QRScanner: React.FC = () => {
         setScannedCode(randomCode);
         setScanning(false);
         
-        // Display success message
         toast({
           title: "QR Code Scanned",
           description: `Successfully scanned code: ${randomCode}`,
@@ -62,7 +56,6 @@ const QRScanner: React.FC = () => {
     
     let message = "";
     
-    // Different rewards based on the code
     switch (scannedCode) {
       case 'REWARD50':
         message = "You've earned 50 reward points!";
@@ -118,10 +111,8 @@ const QRScanner: React.FC = () => {
             {scanning && (
               <div className="space-y-4">
                 <div className="relative w-full aspect-square overflow-hidden rounded-md bg-black">
-                  {/* Simulated camera view */}
                   <div className="absolute inset-0 animate-pulse opacity-50 bg-gradient-to-b from-transparent to-background/20"></div>
                   
-                  {/* Scan overlay */}
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="w-[70%] h-[70%] border-2 border-white/80 rounded-lg relative">
                       <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-white"></div>
@@ -131,7 +122,6 @@ const QRScanner: React.FC = () => {
                     </div>
                   </div>
                   
-                  {/* Scan line animation */}
                   <div 
                     className="absolute left-[15%] w-[70%] h-0.5 bg-red-500 opacity-70"
                     style={{
@@ -140,13 +130,15 @@ const QRScanner: React.FC = () => {
                     }}
                   ></div>
                   
-                  <style jsx>{`
+                  <style>
+                    {`
                     @keyframes scanline {
                       0% { transform: translateY(-100px); }
                       50% { transform: translateY(100px); }
                       100% { transform: translateY(-100px); }
                     }
-                  `}</style>
+                    `}
+                  </style>
                 </div>
                 
                 <Button 
@@ -195,7 +187,6 @@ const QRScanner: React.FC = () => {
           </CardContent>
         </Card>
         
-        {/* Additional instructions */}
         <div className="mt-6 bg-muted rounded-lg p-4">
           <h3 className="font-semibold mb-2">How to use QR codes</h3>
           <ul className="text-sm text-muted-foreground space-y-2">
