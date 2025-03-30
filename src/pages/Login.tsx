@@ -12,10 +12,23 @@ const Login: React.FC = () => {
   const { login, isLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await login(email, password);
+    setErrorMessage('');
+    
+    if (!email || !password) {
+      setErrorMessage('Please enter both email and password');
+      return;
+    }
+    
+    try {
+      await login(email, password);
+    } catch (error: any) {
+      console.error('Login error in component:', error);
+      setErrorMessage(error.message || 'An error occurred during login');
+    }
   };
   
   return (
@@ -26,6 +39,12 @@ const Login: React.FC = () => {
           Enter your credentials to access your account
         </p>
       </div>
+      
+      {errorMessage && (
+        <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md text-destructive text-sm">
+          {errorMessage}
+        </div>
+      )}
       
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">

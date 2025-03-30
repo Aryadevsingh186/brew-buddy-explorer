@@ -32,10 +32,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(true);
       
       try {
+        console.log("Checking for existing session...");
         // Get current session from Supabase
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session) {
+          console.log("Session found:", session.user.id);
           // Get user profile from the profiles table
           const { data: profile, error } = await supabase
             .from('profiles')
@@ -48,6 +50,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             return;
           }
           
+          console.log("Profile data:", profile);
+          
           // Set user state with profile data - ensure role is either 'customer' or 'admin'
           setUser({
             id: session.user.id,
@@ -56,6 +60,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             role: (profile.role === 'admin' ? 'admin' : 'customer') as 'customer' | 'admin',
             points: profile.points || 0
           });
+        } else {
+          console.log("No active session found");
         }
       } catch (error) {
         console.error('Session check error:', error);
@@ -70,7 +76,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Subscribe to auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log("Auth state change event:", event);
+        
         if (event === 'SIGNED_IN' && session) {
+          console.log("User signed in:", session.user.id);
+          
           // Get user profile upon sign in
           const { data: profile, error } = await supabase
             .from('profiles')
@@ -79,6 +89,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .single();
           
           if (!error && profile) {
+            console.log("Profile found:", profile);
             setUser({
               id: session.user.id,
               name: profile.name || session.user.email?.split('@')[0] || 'User',
@@ -87,6 +98,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               points: profile.points || 0
             });
           } else {
+            console.log("Profile not found or error:", error);
             // If no profile exists yet, create one
             const newProfile = {
               id: session.user.id,
@@ -100,6 +112,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setUser(newProfile);
           }
         } else if (event === 'SIGNED_OUT') {
+          console.log("User signed out");
           setUser(null);
         }
       }
@@ -114,13 +127,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     try {
       setIsLoading(true);
+      console.log("Attempting login for:", email);
       
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Login error:", error.message);
+        throw error;
+      }
+      
+      console.log("Login successful, session:", data.session);
       
       toast({
         title: "Login successful",
@@ -128,6 +147,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       
     } catch (error: any) {
+      console.error("Login error caught:", error.message);
       toast({
         title: "Login failed",
         description: error.message || "An unknown error occurred",
@@ -141,9 +161,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (name: string, email: string, password: string) => {
     try {
       setIsLoading(true);
+      console.log("Attempting registration for:", email);
       
       // Sign up with Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -153,9 +174,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       });
       
-      if (authError) throw authError;
+      if (error) {
+        console.error("Registration error:", error.message);
+        throw error;
+      }
       
-      // Profile creation is handled by the database trigger
+      console.log("Registration successful, user:", data.user);
       
       toast({
         title: "Registration successful",
@@ -163,6 +187,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       
     } catch (error: any) {
+      console.error("Registration error caught:", error.message);
       toast({
         title: "Registration failed",
         description: error.message || "An unknown error occurred",
@@ -176,10 +201,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = async () => {
     try {
       setIsLoading(true);
+      console.log("Attempting logout");
+      
       const { error } = await supabase.auth.signOut();
       
-      if (error) throw error;
+      if (error) {
+        console.error("Logout error:", error.message);
+        throw error;
+      }
       
+      console.log("Logout successful");
       setUser(null);
       
       toast({
@@ -187,6 +218,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: "You have been successfully logged out.",
       });
     } catch (error: any) {
+      console.error("Logout error caught:", error.message);
       toast({
         title: "Logout failed",
         description: error.message || "An unknown error occurred",
