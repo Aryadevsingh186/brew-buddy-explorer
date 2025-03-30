@@ -6,17 +6,19 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, User, Lock, LogIn } from 'lucide-react';
+import { Loader2, User, Lock, LogIn, AlertCircle } from 'lucide-react';
 
 const Login: React.FC = () => {
   const { login, isLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [showConfirmationMessage, setShowConfirmationMessage] = useState(false);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
+    setShowConfirmationMessage(false);
     
     if (!email || !password) {
       setErrorMessage('Please enter both email and password');
@@ -27,7 +29,14 @@ const Login: React.FC = () => {
       await login(email, password);
     } catch (error: any) {
       console.error('Login error in component:', error);
-      setErrorMessage(error.message || 'An error occurred during login');
+      
+      if (error.message?.includes('Invalid login credentials')) {
+        // Check if this could be due to an unconfirmed email
+        setShowConfirmationMessage(true);
+        setErrorMessage('Invalid login credentials. If you just registered, please check your email to confirm your account before logging in.');
+      } else {
+        setErrorMessage(error.message || 'An error occurred during login');
+      }
     }
   };
   
@@ -42,7 +51,19 @@ const Login: React.FC = () => {
       
       {errorMessage && (
         <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md text-destructive text-sm">
-          {errorMessage}
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-4 w-4" />
+            <span>{errorMessage}</span>
+          </div>
+        </div>
+      )}
+      
+      {showConfirmationMessage && (
+        <div className="p-3 bg-amber-50 border border-amber-200 rounded-md text-amber-700 text-sm">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-4 w-4" />
+            <span>Please check your email inbox and click the confirmation link before trying to log in.</span>
+          </div>
         </div>
       )}
       
