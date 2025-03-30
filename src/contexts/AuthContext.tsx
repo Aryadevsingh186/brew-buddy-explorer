@@ -1,14 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from "@/components/ui/use-toast";
-import { createClient } from '@supabase/supabase-js';
-
-// Initialize Supabase client with fallbacks for development
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://your-project-url.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'your-anon-key';
-
-// Create the Supabase client
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+import { supabase } from '@/integrations/supabase/client';
 
 interface User {
   id: string;
@@ -162,22 +155,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (authError) throw authError;
       
-      // Create a profile entry in the profiles table
-      if (authData.user) {
-        const newProfile = {
-          id: authData.user.id,
-          name,
-          email,
-          role: 'customer',
-          points: 50 // Welcome bonus
-        };
-        
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert(newProfile);
-          
-        if (profileError) throw profileError;
-      }
+      // Profile creation is handled by the database trigger
       
       toast({
         title: "Registration successful",
