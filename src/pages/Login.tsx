@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Loader2 } from 'lucide-react';
+import { Loader2, User, Lock, LogIn } from 'lucide-react';
 
 const Login: React.FC = () => {
   const { login, isLoading } = useAuth();
@@ -30,14 +30,18 @@ const Login: React.FC = () => {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
-          <Input 
-            id="email" 
-            type="email" 
-            placeholder="your@email.com" 
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
+          <div className="relative">
+            <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input 
+              id="email" 
+              type="email" 
+              placeholder="your@email.com" 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="pl-10"
+              required
+            />
+          </div>
         </div>
         
         <div className="space-y-2">
@@ -47,14 +51,18 @@ const Login: React.FC = () => {
               Forgot password?
             </Button>
           </div>
-          <Input 
-            id="password" 
-            type="password" 
-            placeholder="••••••••" 
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+          <div className="relative">
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input 
+              id="password" 
+              type="password" 
+              placeholder="••••••••" 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="pl-10"
+              required
+            />
+          </div>
         </div>
         
         <Button 
@@ -68,7 +76,10 @@ const Login: React.FC = () => {
               Logging in...
             </>
           ) : (
-            'Sign in'
+            <>
+              <LogIn className="mr-2 h-4 w-4" />
+              Sign in
+            </>
           )}
         </Button>
       </form>
@@ -96,12 +107,6 @@ const Login: React.FC = () => {
         <Link to="/register" className="underline text-coffee-rich hover:text-coffee-mocha">
           Sign up
         </Link>
-      </div>
-      
-      <div className="text-xs text-center text-muted-foreground mt-6">
-        <p>Demo credentials:</p>
-        <p>Email: user@example.com</p>
-        <p>Password: password</p>
       </div>
     </div>
   );
