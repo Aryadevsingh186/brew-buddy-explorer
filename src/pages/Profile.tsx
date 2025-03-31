@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,34 +8,151 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
-import { User, Bell, Shield, Coffee, Gift, History, QrCode, LogOut } from 'lucide-react';
+import { User, Bell, Shield, Coffee, Gift, History, QrCode, LogOut, Camera, Upload, Trash2 } from 'lucide-react';
 import { toast } from "@/components/ui/use-toast";
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { supabase } from '@/integrations/supabase/client';
 
 const Profile: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, updateProfile } = useAuth();
   const [username, setUsername] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  
+  useEffect(() => {
+    if (user?.id) {
+      getProfile();
+    }
+  }, [user]);
+  
+  async function getProfile() {
+    try {
+      if (!user?.id) return;
+      
+      // Check if we already have the avatar in storage
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('avatar_url')
+        .eq('id', user.id)
+        .single();
+      
+      if (profileError) {
+        console.error('Error fetching profile:', profileError);
+        return;
+      }
+      
+      if (profileData?.avatar_url) {
+        setAvatarUrl(profileData.avatar_url);
+      }
+    } catch (error) {
+      console.error('Error loading profile data:', error);
+    }
+  }
+  
+  async function uploadAvatar(event: React.ChangeEvent<HTMLInputElement>) {
+    try {
+      setUploading(true);
+      
+      if (!event.target.files || event.target.files.length === 0) {
+        throw new Error('You must select an image to upload.');
+      }
+      
+      const file = event.target.files[0];
+      const fileExt = file.name.split('.').pop();
+      const filePath = `${user?.id}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      
+      // Upload the file to Supabase storage
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file);
+        
+      if (uploadError) {
+        throw uploadError;
+      }
+      
+      // Get the public URL
+      const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
+      const avatarUrl = data.publicUrl;
+      
+      // Update the user's profile with the avatar URL
+      await updateProfile({ avatar_url: avatarUrl });
+      
+      setAvatarUrl(avatarUrl);
+      toast({
+        title: "Avatar updated",
+        description: "Your profile photo has been updated successfully",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Upload failed",
+        description: error.message || "There was an error uploading your photo",
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+    }
+  }
+  
+  async function removeAvatar() {
+    try {
+      setUploading(true);
+      
+      if (!avatarUrl) return;
+      
+      // Extract the file name from the URL
+      const filePathMatch = avatarUrl.match(/avatars\/(.+)$/);
+      if (filePathMatch && filePathMatch[1]) {
+        const filePath = filePathMatch[1];
+        
+        // Remove the file from storage
+        const { error: removeError } = await supabase.storage
+          .from('avatars')
+          .remove([filePath]);
+          
+        if (removeError) {
+          throw removeError;
+        }
+      }
+      
+      // Update the user's profile to remove avatar URL
+      await updateProfile({ avatar_url: null });
+      
+      setAvatarUrl(null);
+      toast({
+        title: "Avatar removed",
+        description: "Your profile photo has been removed successfully",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Remove failed",
+        description: error.message || "There was an error removing your photo",
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+    }
+  }
   
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsUpdating(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await updateProfile({ name: username });
       
       toast({
         title: "Profile updated",
         description: "Your profile information has been updated successfully",
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Update failed",
-        description: "There was an error updating your profile",
+        description: error.message || "There was an error updating your profile",
         variant: "destructive",
       });
     } finally {
@@ -125,9 +242,47 @@ const Profile: React.FC = () => {
           <Card>
             <CardContent className="pt-6">
               <div className="flex flex-col items-center text-center">
-                <div className="w-24 h-24 rounded-full bg-coffee-mocha/20 flex items-center justify-center mb-4">
-                  <User className="h-12 w-12 text-coffee-mocha" />
+                <div className="w-24 h-24 mb-4 relative group">
+                  <Avatar className="w-24 h-24 border-2 border-muted">
+                    {avatarUrl ? (
+                      <AvatarImage src={avatarUrl} alt={user?.name || 'User'} />
+                    ) : (
+                      <AvatarFallback className="bg-coffee-mocha/20 text-coffee-mocha">
+                        <User className="h-12 w-12" />
+                      </AvatarFallback>
+                    )}
+                  </Avatar>
+                  
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <label htmlFor="avatar-upload" className="cursor-pointer">
+                      <div className="w-24 h-24 rounded-full bg-black/50 flex items-center justify-center">
+                        <Camera className="h-8 w-8 text-white" />
+                      </div>
+                      <input 
+                        id="avatar-upload" 
+                        type="file" 
+                        accept="image/*" 
+                        className="hidden"
+                        onChange={uploadAvatar}
+                        disabled={uploading}
+                      />
+                    </label>
+                  </div>
                 </div>
+                
+                {avatarUrl && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="mb-3" 
+                    onClick={removeAvatar}
+                    disabled={uploading}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Remove Photo
+                  </Button>
+                )}
+                
                 <h2 className="text-xl font-bold">{user?.name}</h2>
                 <p className="text-muted-foreground">{user?.email}</p>
                 
@@ -213,6 +368,7 @@ const Profile: React.FC = () => {
                         placeholder="Your email" 
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
+                        disabled
                       />
                     </div>
                     

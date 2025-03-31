@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase/client';
@@ -9,6 +8,12 @@ interface User {
   email: string;
   role: 'customer' | 'admin';
   points: number;
+  avatar_url?: string | null;
+}
+
+interface ProfileUpdates {
+  name?: string;
+  avatar_url?: string | null;
 }
 
 interface AuthContextType {
@@ -18,6 +23,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  updateProfile: (updates: ProfileUpdates) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -58,7 +64,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             name: profile.name || session.user.email?.split('@')[0] || 'User',
             email: session.user.email || '',
             role: (profile.role === 'admin' ? 'admin' : 'customer') as 'customer' | 'admin',
-            points: profile.points || 0
+            points: profile.points || 0,
+            avatar_url: profile.avatar_url || null
           });
         } else {
           console.log("No active session found");
@@ -95,7 +102,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               name: profile.name || session.user.email?.split('@')[0] || 'User',
               email: session.user.email || '',
               role: (profile.role === 'admin' ? 'admin' : 'customer') as 'customer' | 'admin',
-              points: profile.points || 0
+              points: profile.points || 0,
+              avatar_url: profile.avatar_url || null
             });
           } else {
             console.log("Profile not found or error:", error);
@@ -228,6 +236,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(false);
     }
   };
+  
+  const updateProfile = async (updates: ProfileUpdates) => {
+    try {
+      setIsLoading(true);
+      
+      if (!user) {
+        throw new Error('No user logged in');
+      }
+      
+      console.log("Updating profile for user:", user.id, updates);
+      
+      // Update the user profile in Supabase
+      const { error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', user.id);
+      
+      if (error) {
+        console.error("Profile update error:", error.message);
+        throw error;
+      }
+      
+      // Update the local user state with the new data
+      setUser({
+        ...user,
+        ...updates
+      });
+      
+      console.log("Profile updated successfully");
+      
+    } catch (error: any) {
+      console.error("Profile update error caught:", error.message);
+      toast({
+        title: "Update failed",
+        description: error.message || "An unknown error occurred",
+        variant: "destructive",
+      });
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <AuthContext.Provider value={{ 
@@ -236,7 +286,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isLoading, 
       login, 
       register, 
-      logout 
+      logout,
+      updateProfile
     }}>
       {children}
     </AuthContext.Provider>

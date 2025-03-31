@@ -6,6 +6,40 @@ import type { Database } from './types';
 const SUPABASE_URL = "https://ejrrbosdtwtissxqiczm.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVqcnJib3NkdHd0aXNzeHFpY3ptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMzNTE0MTIsImV4cCI6MjA1ODkyNzQxMn0.Z77sOaNN1KFjdJi4WIdZfajw2qs_y5vLXDYCsdy2B5E";
 
+// Create a storage bucket for avatars if it doesn't exist
+// This operation will be performed when the client initializes
+(async () => {
+  const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+  
+  // Check if the storage bucket exists, if not create it
+  const { data: buckets } = await supabase.storage.listBuckets();
+  const avatarBucketExists = buckets?.some(bucket => bucket.name === 'avatars');
+  
+  if (!avatarBucketExists) {
+    await supabase.storage.createBucket('avatars', {
+      public: true,
+      fileSizeLimit: 1024 * 1024, // 1MB
+      allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp']
+    });
+    console.log('Created avatars storage bucket');
+  }
+  
+  // Check if avatar_url column exists in profiles table, if not add it
+  const { error } = await supabase.rpc('check_column_exists', { 
+    table_name: 'profiles', 
+    column_name: 'avatar_url' 
+  });
+  
+  if (error) {
+    // Column doesn't exist, add it
+    await supabase.query(`
+      ALTER TABLE profiles
+      ADD COLUMN IF NOT EXISTS avatar_url TEXT
+    `);
+    console.log('Added avatar_url column to profiles table');
+  }
+})();
+
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
