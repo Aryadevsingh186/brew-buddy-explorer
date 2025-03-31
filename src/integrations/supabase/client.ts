@@ -32,10 +32,10 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
   
   if (error) {
     // Column doesn't exist, add it
-    await supabase.query(`
-      ALTER TABLE profiles
-      ADD COLUMN IF NOT EXISTS avatar_url TEXT
-    `);
+    await supabase.from('profiles').update(
+      { avatar_url: null },
+      { defaultToNull: true }
+    ).eq('id', '00000000-0000-0000-0000-000000000000');
     console.log('Added avatar_url column to profiles table');
   }
 })();
