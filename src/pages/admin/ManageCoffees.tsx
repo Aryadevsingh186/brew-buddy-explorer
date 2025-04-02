@@ -29,7 +29,7 @@ const ManageCoffees = () => {
     const { data, error } = await supabase
       .from('coffees')
       .select('*')
-      .order('name');
+      .order('name') as { data: Coffee[] | null; error: any };
       
     if (error) {
       console.error('Error fetching coffees:', error);
@@ -91,7 +91,7 @@ const ManageCoffees = () => {
           description: formData.description,
           price: parseFloat(formData.price),
           image_url: formData.image_url || null
-        } as any); // Using 'any' to bypass TypeScript check since our types.ts doesn't include coffees
+        }) as { error: any };
         
       if (error) throw error;
       
@@ -122,8 +122,8 @@ const ManageCoffees = () => {
           description: formData.description,
           price: parseFloat(formData.price),
           image_url: formData.image_url || null
-        } as any) // Using 'any' to bypass TypeScript check
-        .eq('id', selectedCoffee.id);
+        })
+        .eq('id', selectedCoffee.id) as { error: any };
         
       if (error) throw error;
       
@@ -150,7 +150,7 @@ const ManageCoffees = () => {
       const { error } = await supabase
         .from('coffees')
         .delete()
-        .eq('id', selectedCoffee.id);
+        .eq('id', selectedCoffee.id) as { error: any };
         
       if (error) throw error;
       
