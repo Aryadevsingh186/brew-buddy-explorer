@@ -33,6 +33,55 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log("Auth state change event:", event);
+        
+        if (event === 'SIGNED_IN' && session) {
+          console.log("User signed in:", session.user.id);
+          
+          setTimeout(async () => {
+            try {
+              const { data: profile, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', session.user.id)
+                .single();
+              
+              if (!error && profile) {
+                console.log("Profile found:", profile);
+                setUser({
+                  id: session.user.id,
+                  name: profile.name || session.user.email?.split('@')[0] || 'User',
+                  email: session.user.email || '',
+                  role: (profile.role === 'admin' ? 'admin' : 'customer') as 'customer' | 'admin',
+                  points: profile.points || 0,
+                  avatar_url: profile.avatar_url || null
+                });
+              } else {
+                console.log("Profile not found or error:", error);
+                const newProfile = {
+                  id: session.user.id,
+                  name: session.user.email?.split('@')[0] || 'User',
+                  email: session.user.email,
+                  role: 'customer' as 'customer' | 'admin',
+                  points: 50
+                };
+                
+                await supabase.from('profiles').insert(newProfile);
+                setUser(newProfile);
+              }
+            } catch (error) {
+              console.error("Error in auth state change:", error);
+            }
+          }, 0);
+        } else if (event === 'SIGNED_OUT') {
+          console.log("User signed out");
+          setUser(null);
+        }
+      }
+    );
+    
     const checkSession = async () => {
       setIsLoading(true);
       
@@ -50,6 +99,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             
           if (error) {
             console.error('Error fetching user profile:', error);
+            setIsLoading(false);
             return;
           }
           
@@ -74,49 +124,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
     
     checkSession();
-    
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log("Auth state change event:", event);
-        
-        if (event === 'SIGNED_IN' && session) {
-          console.log("User signed in:", session.user.id);
-          
-          const { data: profile, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-          
-          if (!error && profile) {
-            console.log("Profile found:", profile);
-            setUser({
-              id: session.user.id,
-              name: profile.name || session.user.email?.split('@')[0] || 'User',
-              email: session.user.email || '',
-              role: (profile.role === 'admin' ? 'admin' : 'customer') as 'customer' | 'admin',
-              points: profile.points || 0,
-              avatar_url: profile.avatar_url || null
-            });
-          } else {
-            console.log("Profile not found or error:", error);
-            const newProfile = {
-              id: session.user.id,
-              name: session.user.email?.split('@')[0] || 'User',
-              email: session.user.email,
-              role: 'customer' as 'customer' | 'admin',
-              points: 50
-            };
-            
-            await supabase.from('profiles').insert(newProfile);
-            setUser(newProfile);
-          }
-        } else if (event === 'SIGNED_OUT') {
-          console.log("User signed out");
-          setUser(null);
-        }
-      }
-    );
     
     return () => {
       subscription.unsubscribe();
@@ -253,6 +260,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       
       console.log("Profile updated successfully");
+      toast({
+        title: "Profile updated",
+        description: "Your profile has been successfully updated",
+      });
       
     } catch (error: any) {
       console.error("Profile update error caught:", error.message);

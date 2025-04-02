@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -25,37 +26,11 @@ const Profile: React.FC = () => {
   
   useEffect(() => {
     if (user?.id) {
-      getProfile();
+      setUsername(user.name || '');
+      setEmail(user.email || '');
+      setAvatarUrl(user.avatar_url || null);
     }
   }, [user]);
-  
-  async function getProfile() {
-    try {
-      if (!user?.id) return;
-      
-      console.log("Fetching profile for user ID:", user.id);
-      
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('avatar_url')
-        .eq('id', user.id)
-        .single();
-      
-      if (profileError) {
-        console.error('Error fetching profile:', profileError);
-        return;
-      }
-      
-      console.log("Profile data fetched:", profileData);
-      
-      if (profileData?.avatar_url) {
-        console.log("Setting avatar URL:", profileData.avatar_url);
-        setAvatarUrl(profileData.avatar_url);
-      }
-    } catch (error) {
-      console.error('Error loading profile data:', error);
-    }
-  }
   
   async function uploadAvatar(event: React.ChangeEvent<HTMLInputElement>) {
     try {
@@ -65,38 +40,54 @@ const Profile: React.FC = () => {
         throw new Error('You must select an image to upload.');
       }
       
+      if (!user?.id) {
+        throw new Error('You must be logged in to upload an avatar.');
+      }
+      
       const file = event.target.files[0];
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user?.id}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-      const filePath = fileName;
+      const userId = user.id;
+      const fileName = `${userId}/${Math.random().toString(36).substring(2)}.${fileExt}`;
       
-      console.log("Uploading file:", filePath);
+      console.log("Uploading file:", fileName);
       
-      const { error: uploadError } = await supabase.storage
+      // First, try to create the bucket if it doesn't exist
+      try {
+        const { data: buckets } = await supabase.storage.listBuckets();
+        if (!buckets?.some(bucket => bucket.name === 'avatars')) {
+          console.log("Creating avatars bucket");
+          await supabase.storage.createBucket('avatars', {
+            public: true,
+            fileSizeLimit: 1024 * 1024, // 1MB
+            allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp']
+          });
+        }
+      } catch (error) {
+        console.log("Bucket already exists or creation error", error);
+        // Continue with upload as bucket might already exist
+      }
+      
+      const { error: uploadError, data } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file);
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
         
       if (uploadError) {
+        console.error("Upload error:", uploadError);
         throw uploadError;
       }
       
-      const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
-      const avatarUrl = data.publicUrl;
+      console.log("Upload successful:", data);
+      
+      const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(fileName);
+      const avatarUrl = urlData.publicUrl;
       
       console.log("File uploaded, public URL:", avatarUrl);
       
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ avatar_url: avatarUrl })
-        .eq('id', user?.id);
-        
-      if (updateError) {
-        console.error("Error updating profile:", updateError);
-        throw updateError;
-      }
-      
-      setAvatarUrl(avatarUrl);
       await updateProfile({ avatar_url: avatarUrl });
+      setAvatarUrl(avatarUrl);
       
       console.log("Profile updated with new avatar URL");
       
@@ -122,22 +113,32 @@ const Profile: React.FC = () => {
       
       if (!avatarUrl) return;
       
+      // Try to extract the file path from the URL
       const filePathMatch = avatarUrl.match(/avatars\/(.+)$/);
       if (filePathMatch && filePathMatch[1]) {
         const filePath = filePathMatch[1];
         
-        const { error: removeError } = await supabase.storage
-          .from('avatars')
-          .remove([filePath]);
-          
-        if (removeError) {
-          throw removeError;
+        console.log("Removing file:", filePath);
+        
+        // Try to remove the file from storage
+        try {
+          const { error: removeError } = await supabase.storage
+            .from('avatars')
+            .remove([filePath]);
+            
+          if (removeError) {
+            console.error("Remove error:", removeError);
+          }
+        } catch (error) {
+          console.error("Error removing file from storage:", error);
+          // Continue with profile update even if file removal fails
         }
       }
       
+      // Update the profile regardless of file removal success
       await updateProfile({ avatar_url: null });
-      
       setAvatarUrl(null);
+      
       toast({
         title: "Avatar removed",
         description: "Your profile photo has been removed successfully",
@@ -312,6 +313,15 @@ const Profile: React.FC = () => {
                     <span className="font-medium">{user?.points} points</span>
                   </div>
                 </div>
+                
+                {user?.role === 'admin' && (
+                  <div className="mt-2 bg-blue-500/10 px-4 py-2 rounded-full">
+                    <div className="flex items-center gap-1">
+                      <Shield className="h-4 w-4 text-blue-500" />
+                      <span className="font-medium">Admin</span>
+                    </div>
+                  </div>
+                )}
                 
                 <Button 
                   variant="outline" 
