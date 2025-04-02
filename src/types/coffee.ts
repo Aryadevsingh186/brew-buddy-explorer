@@ -4,6 +4,6 @@ export interface Coffee {
   name: string;
   description: string;
   price: number;
-  image_url?: string;
-  created_at?: string;
+  image_url?: string | null;
+  created_at?: string | null;
 }

@@ -43,7 +43,42 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = createClient<Database>(
+// Define a custom type that extends the generated Database type to include the coffees table
+type CustomDatabase = Database & {
+  public: {
+    Tables: {
+      coffees: {
+        Row: {
+          id: string;
+          name: string;
+          description: string;
+          price: number;
+          image_url?: string | null;
+          created_at?: string | null;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          description: string;
+          price: number;
+          image_url?: string | null;
+          created_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          description?: string;
+          price?: number;
+          image_url?: string | null;
+          created_at?: string | null;
+        };
+        Relationships: [];
+      };
+    } & Database['public']['Tables'];
+  } & Omit<Database['public'], 'Tables'>;
+};
+
+export const supabase = createClient<CustomDatabase>(
   SUPABASE_URL, 
   SUPABASE_PUBLISHABLE_KEY,
   {
