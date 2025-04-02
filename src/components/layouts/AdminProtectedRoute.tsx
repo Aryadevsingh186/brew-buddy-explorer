@@ -1,11 +1,23 @@
 
-import React from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Navigate, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
+import { toast } from "@/components/ui/use-toast";
 
 const AdminProtectedRoute: React.FC = () => {
-  const { isAuthenticated, isAdmin, isLoading } = useAuth();
+  const { isAuthenticated, isAdmin, isLoading, user } = useAuth();
+  const navigate = useNavigate();
+
+  // Log the authentication state for debugging
+  useEffect(() => {
+    console.log("Admin route authentication state:", { 
+      isAuthenticated, 
+      isAdmin, 
+      isLoading,
+      userRole: user?.role 
+    });
+  }, [isAuthenticated, isAdmin, isLoading, user]);
 
   if (isLoading) {
     return (
@@ -18,11 +30,21 @@ const AdminProtectedRoute: React.FC = () => {
 
   // If not authenticated, redirect to login
   if (!isAuthenticated) {
+    toast({
+      title: "Authentication Required",
+      description: "Please log in to access the admin area.",
+      variant: "destructive",
+    });
     return <Navigate to="/login" replace />;
   }
 
-  // If authenticated but not admin, redirect to home
+  // If authenticated but not admin, redirect to home with a message
   if (!isAdmin) {
+    toast({
+      title: "Access Denied",
+      description: "You don't have administrator privileges.",
+      variant: "destructive",
+    });
     return <Navigate to="/" replace />;
   }
 

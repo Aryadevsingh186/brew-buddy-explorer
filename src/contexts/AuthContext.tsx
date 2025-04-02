@@ -55,16 +55,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 console.log("Profile found:", profile);
                 const userRole = profile.role === 'admin' ? 'admin' : 'customer';
                 
-                setUser({
+                const userData = {
                   id: session.user.id,
                   name: profile.name || session.user.email?.split('@')[0] || 'User',
                   email: session.user.email || '',
                   role: userRole,
                   points: profile.points || 0,
                   avatar_url: profile.avatar_url || null
-                });
+                };
                 
+                setUser(userData);
                 setIsAdmin(userRole === 'admin');
+                console.log("Admin status set to:", userRole === 'admin');
               } else {
                 console.log("Profile not found or error:", error);
                 const newProfile = {
@@ -118,16 +120,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           console.log("Profile data:", profile);
           const userRole = profile.role === 'admin' ? 'admin' : 'customer';
           
-          setUser({
+          const userData = {
             id: session.user.id,
             name: profile.name || session.user.email?.split('@')[0] || 'User',
             email: session.user.email || '',
             role: userRole,
             points: profile.points || 0,
             avatar_url: profile.avatar_url || null
-          });
+          };
           
+          setUser(userData);
           setIsAdmin(userRole === 'admin');
+          console.log("Admin status set to:", userRole === 'admin');
         } else {
           console.log("No active session found");
         }

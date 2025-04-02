@@ -3,13 +3,13 @@ import React from 'react';
 import { Outlet, Navigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
-import { Coffee, ShoppingBag, Home, Map, User, QrCode, Menu as MenuIcon, ShoppingCart } from 'lucide-react';
+import { Coffee, ShoppingBag, Home, Map, User, QrCode, Menu as MenuIcon, ShoppingCart, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 
 const AppLayout: React.FC = () => {
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, user, logout, isAdmin } = useAuth();
   const { totalItems } = useCart();
   const location = useLocation();
   
@@ -79,6 +79,21 @@ const AppLayout: React.FC = () => {
                     <QrCode size={20} />
                     Scan QR
                   </Link>
+                  
+                  {/* Admin link for mobile */}
+                  {isAdmin && (
+                    <Link
+                      to="/admin"
+                      className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm ${
+                        location.pathname.startsWith('/admin') 
+                          ? 'bg-coffee-mocha text-white' 
+                          : 'hover:bg-muted'
+                      }`}
+                    >
+                      <Settings size={20} />
+                      Admin Panel
+                    </Link>
+                  )}
                 </nav>
                 
                 <div className="border-t pt-4">
@@ -88,6 +103,11 @@ const AppLayout: React.FC = () => {
                     <div className="text-sm font-medium text-coffee-caramel mt-1">
                       {user?.points} points
                     </div>
+                    {user?.role === 'admin' && (
+                      <div className="text-xs font-medium text-green-600 mt-1">
+                        Administrator
+                      </div>
+                    )}
                   </div>
                   <Button 
                     variant="outline" 
@@ -153,6 +173,21 @@ const AppLayout: React.FC = () => {
               <QrCode size={20} />
               <span>Scan QR</span>
             </Link>
+            
+            {/* Admin link for desktop */}
+            {isAdmin && (
+              <Link 
+                to="/admin"
+                className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md ${
+                  location.pathname.startsWith('/admin') 
+                    ? 'bg-coffee-mocha text-white' 
+                    : 'hover:bg-muted bg-amber-100'
+                }`}
+              >
+                <Settings size={20} />
+                <span>Admin</span>
+              </Link>
+            )}
           </nav>
         </div>
       </header>
