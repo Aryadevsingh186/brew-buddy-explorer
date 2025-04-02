@@ -26,10 +26,11 @@ const ManageCoffees = () => {
   });
   
   const fetchCoffees = async (): Promise<Coffee[]> => {
-    const { data, error } = await supabase
+    // Use type assertion to tell TypeScript what the structure will be
+    const { data, error } = await (supabase
       .from('coffees')
       .select('*')
-      .order('name') as { data: Coffee[] | null; error: any };
+      .order('name') as unknown as Promise<{ data: Coffee[] | null; error: any }>);
       
     if (error) {
       console.error('Error fetching coffees:', error);
@@ -84,14 +85,15 @@ const ManageCoffees = () => {
   
   const handleAddCoffee = async () => {
     try {
-      const { error } = await supabase
+      // Use type assertion to help TypeScript understand the structure
+      const { error } = await (supabase
         .from('coffees')
         .insert({
           name: formData.name,
           description: formData.description,
           price: parseFloat(formData.price),
           image_url: formData.image_url || null
-        }) as { error: any };
+        }) as unknown as Promise<{ error: any }>);
         
       if (error) throw error;
       
@@ -115,7 +117,8 @@ const ManageCoffees = () => {
     if (!selectedCoffee) return;
     
     try {
-      const { error } = await supabase
+      // Use type assertion for the update operation
+      const { error } = await (supabase
         .from('coffees')
         .update({
           name: formData.name,
@@ -123,7 +126,7 @@ const ManageCoffees = () => {
           price: parseFloat(formData.price),
           image_url: formData.image_url || null
         })
-        .eq('id', selectedCoffee.id) as { error: any };
+        .eq('id', selectedCoffee.id) as unknown as Promise<{ error: any }>);
         
       if (error) throw error;
       
@@ -147,10 +150,11 @@ const ManageCoffees = () => {
     if (!selectedCoffee) return;
     
     try {
-      const { error } = await supabase
+      // Use type assertion for the delete operation
+      const { error } = await (supabase
         .from('coffees')
         .delete()
-        .eq('id', selectedCoffee.id) as { error: any };
+        .eq('id', selectedCoffee.id) as unknown as Promise<{ error: any }>);
         
       if (error) throw error;
       
