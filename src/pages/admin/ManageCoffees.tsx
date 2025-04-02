@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
@@ -26,11 +25,10 @@ const ManageCoffees = () => {
   });
   
   const fetchCoffees = async (): Promise<Coffee[]> => {
-    // Use type assertion to tell TypeScript what the structure will be
     const { data, error } = await (supabase
-      .from('coffees')
+      .from('coffees') as any)
       .select('*')
-      .order('name') as unknown as Promise<{ data: Coffee[] | null; error: any }>);
+      .order('name');
       
     if (error) {
       console.error('Error fetching coffees:', error);
@@ -85,15 +83,14 @@ const ManageCoffees = () => {
   
   const handleAddCoffee = async () => {
     try {
-      // Use type assertion to help TypeScript understand the structure
       const { error } = await (supabase
-        .from('coffees')
+        .from('coffees') as any)
         .insert({
           name: formData.name,
           description: formData.description,
           price: parseFloat(formData.price),
           image_url: formData.image_url || null
-        }) as unknown as Promise<{ error: any }>);
+        });
         
       if (error) throw error;
       
@@ -117,16 +114,15 @@ const ManageCoffees = () => {
     if (!selectedCoffee) return;
     
     try {
-      // Use type assertion for the update operation
       const { error } = await (supabase
-        .from('coffees')
+        .from('coffees') as any)
         .update({
           name: formData.name,
           description: formData.description,
           price: parseFloat(formData.price),
           image_url: formData.image_url || null
         })
-        .eq('id', selectedCoffee.id) as unknown as Promise<{ error: any }>);
+        .eq('id', selectedCoffee.id);
         
       if (error) throw error;
       
@@ -150,11 +146,10 @@ const ManageCoffees = () => {
     if (!selectedCoffee) return;
     
     try {
-      // Use type assertion for the delete operation
       const { error } = await (supabase
-        .from('coffees')
+        .from('coffees') as any)
         .delete()
-        .eq('id', selectedCoffee.id) as unknown as Promise<{ error: any }>);
+        .eq('id', selectedCoffee.id);
         
       if (error) throw error;
       
@@ -241,7 +236,6 @@ const ManageCoffees = () => {
         </div>
       )}
       
-      {/* Add Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -312,7 +306,6 @@ const ManageCoffees = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -379,7 +372,6 @@ const ManageCoffees = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Delete Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
