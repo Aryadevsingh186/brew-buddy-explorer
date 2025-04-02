@@ -19,10 +19,15 @@ import NotFound from "./pages/NotFound";
 // Layouts
 import AppLayout from "./components/layouts/AppLayout";
 import AuthLayout from "./components/layouts/AuthLayout";
+import AdminProtectedRoute from "./components/layouts/AdminProtectedRoute";
 
 // Context providers
 import { AuthProvider } from "./contexts/AuthContext";
 import { CartProvider } from "./contexts/CartContext";
+
+// Admin pages
+import AdminDashboard from "./pages/admin/Dashboard";
+import ManageCoffees from "./pages/admin/ManageCoffees";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +44,12 @@ const App = () => (
               <Route element={<AuthLayout />}>
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
+              </Route>
+
+              {/* Admin routes - protected by role */}
+              <Route element={<AdminProtectedRoute />}>
+                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/admin/coffees" element={<ManageCoffees />} />
               </Route>
 
               {/* App routes */}

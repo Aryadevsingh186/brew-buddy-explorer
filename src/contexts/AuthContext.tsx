@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase/client';
@@ -20,6 +21,7 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isAdmin: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -31,10 +33,11 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         console.log("Auth state change event:", event);
         
         if (event === 'SIGNED_IN' && session) {
@@ -50,14 +53,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               
               if (!error && profile) {
                 console.log("Profile found:", profile);
+                const userRole = profile.role === 'admin' ? 'admin' : 'customer';
+                
                 setUser({
                   id: session.user.id,
                   name: profile.name || session.user.email?.split('@')[0] || 'User',
                   email: session.user.email || '',
-                  role: (profile.role === 'admin' ? 'admin' : 'customer') as 'customer' | 'admin',
+                  role: userRole,
                   points: profile.points || 0,
                   avatar_url: profile.avatar_url || null
                 });
+                
+                setIsAdmin(userRole === 'admin');
               } else {
                 console.log("Profile not found or error:", error);
                 const newProfile = {
@@ -70,14 +77,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 
                 await supabase.from('profiles').insert(newProfile);
                 setUser(newProfile);
+                setIsAdmin(false);
               }
             } catch (error) {
               console.error("Error in auth state change:", error);
+            } finally {
+              setIsLoading(false);
             }
           }, 0);
         } else if (event === 'SIGNED_OUT') {
           console.log("User signed out");
           setUser(null);
+          setIsAdmin(false);
+          setIsLoading(false);
         }
       }
     );
@@ -104,15 +116,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
           
           console.log("Profile data:", profile);
+          const userRole = profile.role === 'admin' ? 'admin' : 'customer';
           
           setUser({
             id: session.user.id,
             name: profile.name || session.user.email?.split('@')[0] || 'User',
             email: session.user.email || '',
-            role: (profile.role === 'admin' ? 'admin' : 'customer') as 'customer' | 'admin',
+            role: userRole,
             points: profile.points || 0,
             avatar_url: profile.avatar_url || null
           });
+          
+          setIsAdmin(userRole === 'admin');
         } else {
           console.log("No active session found");
         }
@@ -217,6 +232,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       console.log("Logout successful");
       setUser(null);
+      setIsAdmin(false);
       
       toast({
         title: "Logged out",
@@ -254,6 +270,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw error;
       }
       
+      // Update local user state with new values
       setUser({
         ...user,
         ...updates
@@ -283,6 +300,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       user, 
       isAuthenticated: !!user, 
       isLoading, 
+      isAdmin,
       login, 
       register, 
       logout,
