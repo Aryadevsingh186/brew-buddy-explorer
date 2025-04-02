@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -34,7 +33,8 @@ const Profile: React.FC = () => {
     try {
       if (!user?.id) return;
       
-      // Check if we already have the avatar in storage
+      console.log("Fetching profile for user ID:", user.id);
+      
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('avatar_url')
@@ -46,7 +46,10 @@ const Profile: React.FC = () => {
         return;
       }
       
+      console.log("Profile data fetched:", profileData);
+      
       if (profileData?.avatar_url) {
+        console.log("Setting avatar URL:", profileData.avatar_url);
         setAvatarUrl(profileData.avatar_url);
       }
     } catch (error) {
@@ -64,9 +67,11 @@ const Profile: React.FC = () => {
       
       const file = event.target.files[0];
       const fileExt = file.name.split('.').pop();
-      const filePath = `${user?.id}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const fileName = `${user?.id}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = fileName;
       
-      // Upload the file to Supabase storage
+      console.log("Uploading file:", filePath);
+      
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(filePath, file);
@@ -75,19 +80,32 @@ const Profile: React.FC = () => {
         throw uploadError;
       }
       
-      // Get the public URL
       const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
       const avatarUrl = data.publicUrl;
       
-      // Update the user's profile with the avatar URL
-      await updateProfile({ avatar_url: avatarUrl });
+      console.log("File uploaded, public URL:", avatarUrl);
+      
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: avatarUrl })
+        .eq('id', user?.id);
+        
+      if (updateError) {
+        console.error("Error updating profile:", updateError);
+        throw updateError;
+      }
       
       setAvatarUrl(avatarUrl);
+      await updateProfile({ avatar_url: avatarUrl });
+      
+      console.log("Profile updated with new avatar URL");
+      
       toast({
         title: "Avatar updated",
         description: "Your profile photo has been updated successfully",
       });
     } catch (error: any) {
+      console.error("Upload error:", error);
       toast({
         title: "Upload failed",
         description: error.message || "There was an error uploading your photo",
@@ -104,12 +122,10 @@ const Profile: React.FC = () => {
       
       if (!avatarUrl) return;
       
-      // Extract the file name from the URL
       const filePathMatch = avatarUrl.match(/avatars\/(.+)$/);
       if (filePathMatch && filePathMatch[1]) {
         const filePath = filePathMatch[1];
         
-        // Remove the file from storage
         const { error: removeError } = await supabase.storage
           .from('avatars')
           .remove([filePath]);
@@ -119,7 +135,6 @@ const Profile: React.FC = () => {
         }
       }
       
-      // Update the user's profile to remove avatar URL
       await updateProfile({ avatar_url: null });
       
       setAvatarUrl(null);
@@ -163,7 +178,6 @@ const Profile: React.FC = () => {
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate passwords
     if (newPassword !== confirmPassword) {
       toast({
         title: "Passwords don't match",
@@ -185,7 +199,6 @@ const Profile: React.FC = () => {
     setIsUpdating(true);
     
     try {
-      // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1500));
       
       toast({
@@ -193,7 +206,6 @@ const Profile: React.FC = () => {
         description: "Your password has been changed successfully",
       });
       
-      // Reset form
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
@@ -208,7 +220,6 @@ const Profile: React.FC = () => {
     }
   };
   
-  // Mock order history
   const orderHistory = [
     {
       id: "ORD-1234",
@@ -245,7 +256,16 @@ const Profile: React.FC = () => {
                 <div className="w-24 h-24 mb-4 relative group">
                   <Avatar className="w-24 h-24 border-2 border-muted">
                     {avatarUrl ? (
-                      <AvatarImage src={avatarUrl} alt={user?.name || 'User'} />
+                      <AvatarImage 
+                        src={avatarUrl} 
+                        alt={user?.name || 'User'} 
+                        onError={(e) => {
+                          console.error("Error loading avatar image:", e);
+                          const target = e.target as HTMLImageElement;
+                          target.onerror = null;
+                          target.src = ''; // Clear src to show fallback
+                        }}
+                      />
                     ) : (
                       <AvatarFallback className="bg-coffee-mocha/20 text-coffee-mocha">
                         <User className="h-12 w-12" />
