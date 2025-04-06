@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useCart } from '@/contexts/CartContext';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
@@ -13,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Coffee, Sparkles, CupSoda, Leaf, Milk, Search, Loader2 } from 'lucide-react';
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase/client';
+import { Coffee as CoffeeType } from '@/types/coffee';
 
 // Types
 interface CoffeeProduct {
@@ -26,7 +26,7 @@ interface CoffeeProduct {
 }
 
 // Convert database coffee to CoffeeProduct
-const mapDatabaseCoffeeToProduct = (coffee: any): CoffeeProduct => {
+const mapDatabaseCoffeeToProduct = (coffee: CoffeeType): CoffeeProduct => {
   return {
     id: coffee.id,
     name: coffee.name,
@@ -83,18 +83,21 @@ const Menu: React.FC = () => {
           throw error;
         }
         
+        console.log('Fetched coffee items:', data);
         // Map database items to our CoffeeProduct interface
         return data.map(mapDatabaseCoffeeToProduct);
       } catch (err) {
         console.error('Failed to fetch coffee items:', err);
         // Use fallback data if fetch fails
-        return fallbackCoffeeProducts;
+        return [];
       }
     }
   });
   
-  // Use actual data or fallback if needed
-  const coffeeProducts = coffeeItems || fallbackCoffeeProducts;
+  // Create a combined list of coffee products using both database items and fallbacks
+  const coffeeProducts = (coffeeItems && coffeeItems.length > 0) 
+    ? [...coffeeItems, ...fallbackCoffeeProducts]  // Combine database items with fallbacks
+    : fallbackCoffeeProducts;  // Use only fallbacks if no database items
   
   const handleSelectProduct = (product: CoffeeProduct) => {
     setSelectedProduct(product);
@@ -177,6 +180,9 @@ const Menu: React.FC = () => {
       product.tags.some(tag => tag.toLowerCase().includes(query))
     );
   };
+
+  console.log('Total coffee products:', coffeeProducts.length);
+  console.log('Database coffee items:', coffeeItems?.length || 0);
   
   return (
     <div className="container py-6">
