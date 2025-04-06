@@ -8,7 +8,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { Coffee, Sparkles, CupSoda, Leaf, Milk } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Coffee, Sparkles, CupSoda, Leaf, Milk, Search } from 'lucide-react';
 import { toast } from "@/components/ui/use-toast";
 
 // Types
@@ -104,6 +105,7 @@ const Menu: React.FC = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedSize, setSelectedSize] = useState<'small' | 'medium' | 'large'>('medium');
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
   
   const handleSelectProduct = (product: CoffeeProduct) => {
     setSelectedProduct(product);
@@ -176,67 +178,108 @@ const Menu: React.FC = () => {
     return coffeeProducts.filter(product => product.category === category);
   };
   
+  const filterProductsBySearch = (products: CoffeeProduct[]) => {
+    if (!searchQuery.trim()) return products;
+    
+    const query = searchQuery.toLowerCase().trim();
+    return products.filter(product => 
+      product.name.toLowerCase().includes(query) || 
+      product.description.toLowerCase().includes(query) ||
+      product.tags.some(tag => tag.toLowerCase().includes(query))
+    );
+  };
+  
   return (
     <div className="container py-6">
       <h1 className="text-3xl font-bold mb-6">Our Menu</h1>
       
-      <Tabs defaultValue="all" className="mb-6">
-        <TabsList className="mb-4 w-full md:w-auto">
-          <TabsTrigger value="all" className="flex items-center gap-1">
-            <Sparkles className="h-4 w-4" />
-            <span>All</span>
-          </TabsTrigger>
-          <TabsTrigger value="coffee" className="flex items-center gap-1">
-            <Coffee className="h-4 w-4" />
-            <span>Coffee</span>
-          </TabsTrigger>
-          <TabsTrigger value="tea" className="flex items-center gap-1">
-            <Leaf className="h-4 w-4" />
-            <span>Tea</span>
-          </TabsTrigger>
-          <TabsTrigger value="smoothie" className="flex items-center gap-1">
-            <Milk className="h-4 w-4" />
-            <span>Smoothies</span>
-          </TabsTrigger>
-          <TabsTrigger value="refreshment" className="flex items-center gap-1">
-            <CupSoda className="h-4 w-4" />
-            <span>Refreshments</span>
-          </TabsTrigger>
-        </TabsList>
+      <div className="flex flex-col md:flex-row gap-4 mb-6 items-center">
+        <div className="relative w-full md:max-w-sm">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input 
+            type="search" 
+            placeholder="Search menu items..." 
+            className="pl-9"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
         
-        {['all', 'coffee', 'tea', 'smoothie', 'refreshment'].map(category => (
-          <TabsContent key={category} value={category}>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filterProductsByCategory(category).map(product => (
-                <div key={product.id} className="coffee-card overflow-hidden">
-                  <div 
-                    className="h-48 bg-center bg-cover" 
-                    style={{ backgroundImage: `url(${product.image})` }}
-                  ></div>
-                  <div className="p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-lg font-bold">{product.name}</h3>
-                      <div className="flex items-center text-sm">
-                        {getCategoryIcon(product.category)}
+        <Tabs defaultValue="all" className="w-full">
+          <TabsList className="w-full md:w-auto">
+            <TabsTrigger value="all" className="flex items-center gap-1">
+              <Sparkles className="h-4 w-4" />
+              <span>All</span>
+            </TabsTrigger>
+            <TabsTrigger value="coffee" className="flex items-center gap-1">
+              <Coffee className="h-4 w-4" />
+              <span>Coffee</span>
+            </TabsTrigger>
+            <TabsTrigger value="tea" className="flex items-center gap-1">
+              <Leaf className="h-4 w-4" />
+              <span>Tea</span>
+            </TabsTrigger>
+            <TabsTrigger value="smoothie" className="flex items-center gap-1">
+              <Milk className="h-4 w-4" />
+              <span>Smoothies</span>
+            </TabsTrigger>
+            <TabsTrigger value="refreshment" className="flex items-center gap-1">
+              <CupSoda className="h-4 w-4" />
+              <span>Refreshments</span>
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+      
+      {['all', 'coffee', 'tea', 'smoothie', 'refreshment'].map(category => (
+        <TabsContent key={category} value={category}>
+          {(() => {
+            const filteredProducts = filterProductsBySearch(filterProductsByCategory(category));
+            
+            return filteredProducts.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredProducts.map(product => (
+                  <div key={product.id} className="coffee-card overflow-hidden border rounded-lg shadow-sm">
+                    <div 
+                      className="h-48 bg-center bg-cover" 
+                      style={{ backgroundImage: `url(${product.image})` }}
+                    ></div>
+                    <div className="p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-lg font-bold">{product.name}</h3>
+                        <div className="flex items-center text-sm">
+                          {getCategoryIcon(product.category)}
+                        </div>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-2">{product.description}</p>
+                      <div className="flex justify-between items-center">
+                        <div className="font-semibold">${product.basePrice.toFixed(2)}</div>
+                        <Button 
+                          onClick={() => handleSelectProduct(product)}
+                          className="bg-coffee-rich hover:bg-coffee-rich/90"
+                        >
+                          Add to Cart
+                        </Button>
                       </div>
                     </div>
-                    <p className="text-sm text-muted-foreground mb-2">{product.description}</p>
-                    <div className="flex justify-between items-center">
-                      <div className="font-semibold">${product.basePrice.toFixed(2)}</div>
-                      <Button 
-                        onClick={() => handleSelectProduct(product)}
-                        className="bg-coffee-rich hover:bg-coffee-rich/90"
-                      >
-                        Add to Cart
-                      </Button>
-                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          </TabsContent>
-        ))}
-      </Tabs>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">No items found matching "{searchQuery}"</p>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setSearchQuery('')}
+                  className="mt-2"
+                >
+                  Clear search
+                </Button>
+              </div>
+            );
+          })()}
+        </TabsContent>
+      ))}
       
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
