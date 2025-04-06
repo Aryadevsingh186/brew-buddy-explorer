@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
@@ -25,8 +26,8 @@ const ManageCoffees = () => {
   });
   
   const fetchCoffees = async (): Promise<Coffee[]> => {
-    const { data, error } = await (supabase
-      .from('coffees') as any)
+    const { data, error } = await supabase
+      .from('coffees')
       .select('*')
       .order('name');
       
@@ -83,8 +84,8 @@ const ManageCoffees = () => {
   
   const handleAddCoffee = async () => {
     try {
-      const { error } = await (supabase
-        .from('coffees') as any)
+      const { error } = await supabase
+        .from('coffees')
         .insert({
           name: formData.name,
           description: formData.description,
@@ -114,8 +115,8 @@ const ManageCoffees = () => {
     if (!selectedCoffee) return;
     
     try {
-      const { error } = await (supabase
-        .from('coffees') as any)
+      const { error } = await supabase
+        .from('coffees')
         .update({
           name: formData.name,
           description: formData.description,
@@ -146,8 +147,8 @@ const ManageCoffees = () => {
     if (!selectedCoffee) return;
     
     try {
-      const { error } = await (supabase
-        .from('coffees') as any)
+      const { error } = await supabase
+        .from('coffees')
         .delete()
         .eq('id', selectedCoffee.id);
         
