@@ -7,7 +7,7 @@ interface User {
   id: string;
   name: string;
   email: string;
-  role: 'customer' | 'admin';
+  role: 'customer' | 'admin';  // Fixed: Explicitly define allowed role values
   points: number;
   avatar_url?: string | null;
 }
@@ -55,11 +55,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 console.log("Profile found:", profile);
                 const userRole = profile.role === 'admin' ? 'admin' : 'customer';
                 
-                const userData = {
+                const userData: User = {
                   id: session.user.id,
                   name: profile.name || session.user.email?.split('@')[0] || 'User',
                   email: session.user.email || '',
-                  role: userRole,
+                  role: userRole as 'customer' | 'admin',  // Type assertion to ensure it's one of the allowed values
                   points: profile.points || 0,
                   avatar_url: profile.avatar_url || null
                 };
@@ -78,7 +78,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 };
                 
                 await supabase.from('profiles').insert(newProfile);
-                setUser(newProfile);
+                setUser(newProfile as User);
                 setIsAdmin(false);
               }
             } catch (error) {
@@ -120,11 +120,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           console.log("Profile data:", profile);
           const userRole = profile.role === 'admin' ? 'admin' : 'customer';
           
-          const userData = {
+          const userData: User = {
             id: session.user.id,
             name: profile.name || session.user.email?.split('@')[0] || 'User',
             email: session.user.email || '',
-            role: userRole,
+            role: userRole as 'customer' | 'admin',  // Type assertion
             points: profile.points || 0,
             avatar_url: profile.avatar_url || null
           };
