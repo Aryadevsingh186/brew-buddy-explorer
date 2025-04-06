@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useCart } from '@/contexts/CartContext';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -9,8 +10,9 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Coffee, Sparkles, CupSoda, Leaf, Milk, Search } from 'lucide-react';
+import { Coffee, Sparkles, CupSoda, Leaf, Milk, Search, Loader2 } from 'lucide-react';
 import { toast } from "@/components/ui/use-toast";
+import { supabase } from '@/integrations/supabase/client';
 
 // Types
 interface CoffeeProduct {
@@ -23,8 +25,21 @@ interface CoffeeProduct {
   category: string;
 }
 
-// Mock data
-const coffeeProducts: CoffeeProduct[] = [
+// Convert database coffee to CoffeeProduct
+const mapDatabaseCoffeeToProduct = (coffee: any): CoffeeProduct => {
+  return {
+    id: coffee.id,
+    name: coffee.name,
+    description: coffee.description || '',
+    basePrice: coffee.price,
+    image: coffee.image_url || 'https://images.unsplash.com/photo-1611854779393-1b2da9d400fe', // Default image if none provided
+    tags: coffee.tags || ['coffee'],
+    category: coffee.category || 'coffee'
+  };
+};
+
+// Fallback coffee products in case fetching fails
+const fallbackCoffeeProducts: CoffeeProduct[] = [
   {
     id: "1",
     name: "Espresso",
@@ -42,60 +57,6 @@ const coffeeProducts: CoffeeProduct[] = [
     image: "https://images.unsplash.com/photo-1534778101976-62847782c213",
     tags: ["hot", "classic", "milk"],
     category: "coffee"
-  },
-  {
-    id: "3",
-    name: "Caramel Macchiato",
-    description: "Espresso with vanilla syrup, steamed milk and caramel",
-    basePrice: 4.99,
-    image: "https://images.unsplash.com/photo-1570968915860-54d5c301fa9f",
-    tags: ["hot", "sweet", "milk"],
-    category: "coffee"
-  },
-  {
-    id: "4",
-    name: "Cold Brew",
-    description: "Smooth, cold brewed coffee steeped for 12 hours",
-    basePrice: 3.99,
-    image: "https://images.unsplash.com/photo-1517701604599-bb29b565090c",
-    tags: ["cold", "refreshing"],
-    category: "coffee"
-  },
-  {
-    id: "5",
-    name: "Matcha Latte",
-    description: "Premium matcha green tea with steamed milk",
-    basePrice: 5.50,
-    image: "https://images.unsplash.com/photo-1536256263959-770b48d82b0a",
-    tags: ["hot", "tea", "milk"],
-    category: "tea"
-  },
-  {
-    id: "6",
-    name: "Berry Blast Smoothie",
-    description: "Mixed berries, banana and yogurt",
-    basePrice: 6.50,
-    image: "https://images.unsplash.com/photo-1638176067000-9eea2bffa3b7",
-    tags: ["cold", "fruity", "sweet"],
-    category: "smoothie"
-  },
-  {
-    id: "7",
-    name: "Lemonade",
-    description: "Freshly squeezed lemons with a hint of mint",
-    basePrice: 3.50,
-    image: "https://images.unsplash.com/photo-1621263764928-df1444c3a451",
-    tags: ["cold", "refreshing", "tangy"],
-    category: "refreshment"
-  },
-  {
-    id: "8",
-    name: "Avocado Smoothie",
-    description: "Creamy avocado blended with milk and a touch of honey",
-    basePrice: 7.50,
-    image: "https://images.unsplash.com/photo-1583500178450-e59e4309b57a",
-    tags: ["cold", "creamy", "healthy"],
-    category: "smoothie"
   }
 ];
 
@@ -107,6 +68,33 @@ const Menu: React.FC = () => {
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('all');
+  
+  // Fetch coffees from Supabase
+  const { data: coffeeItems, isLoading, error } = useQuery({
+    queryKey: ['menuItems'],
+    queryFn: async () => {
+      try {
+        const { data, error } = await supabase
+          .from('coffees')
+          .select('*');
+        
+        if (error) {
+          console.error('Error fetching coffee items:', error);
+          throw error;
+        }
+        
+        // Map database items to our CoffeeProduct interface
+        return data.map(mapDatabaseCoffeeToProduct);
+      } catch (err) {
+        console.error('Failed to fetch coffee items:', err);
+        // Use fallback data if fetch fails
+        return fallbackCoffeeProducts;
+      }
+    }
+  });
+  
+  // Use actual data or fallback if needed
+  const coffeeProducts = coffeeItems || fallbackCoffeeProducts;
   
   const handleSelectProduct = (product: CoffeeProduct) => {
     setSelectedProduct(product);
@@ -206,7 +194,12 @@ const Menu: React.FC = () => {
           />
         </div>
         
-        <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <Tabs 
+          defaultValue="all" 
+          value={activeTab} 
+          onValueChange={setActiveTab} 
+          className="w-full"
+        >
           <TabsList className="w-full md:w-auto">
             <TabsTrigger value="all" className="flex items-center gap-1">
               <Sparkles className="h-4 w-4" />
@@ -232,13 +225,18 @@ const Menu: React.FC = () => {
           
           {['all', 'coffee', 'tea', 'smoothie', 'refreshment'].map(category => (
             <TabsContent key={category} value={category}>
-              {(() => {
+              {isLoading ? (
+                <div className="flex justify-center items-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-coffee-rich" />
+                  <span className="ml-2">Loading menu items...</span>
+                </div>
+              ) : (() => {
                 const filteredProducts = filterProductsBySearch(filterProductsByCategory(category));
                 
                 return filteredProducts.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {filteredProducts.map(product => (
-                      <div key={product.id} className="coffee-card overflow-hidden border rounded-lg shadow-sm">
+                      <div key={product.id} className="coffee-card overflow-hidden border rounded-lg shadow-sm hover:shadow-md transition-shadow">
                         <div 
                           className="h-48 bg-center bg-cover" 
                           style={{ backgroundImage: `url(${product.image})` }}

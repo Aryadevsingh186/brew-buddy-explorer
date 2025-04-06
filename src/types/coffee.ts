@@ -6,4 +6,6 @@ export interface Coffee {
   price: number;
   image_url?: string | null;
   created_at?: string | null;
+  category?: string;
+  tags?: string[];
 }
