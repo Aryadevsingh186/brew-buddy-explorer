@@ -106,6 +106,7 @@ const Menu: React.FC = () => {
   const [selectedSize, setSelectedSize] = useState<'small' | 'medium' | 'large'>('medium');
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState('all');
   
   const handleSelectProduct = (product: CoffeeProduct) => {
     setSelectedProduct(product);
@@ -205,7 +206,7 @@ const Menu: React.FC = () => {
           />
         </div>
         
-        <Tabs defaultValue="all" className="w-full">
+        <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="w-full md:w-auto">
             <TabsTrigger value="all" className="flex items-center gap-1">
               <Sparkles className="h-4 w-4" />
@@ -228,58 +229,58 @@ const Menu: React.FC = () => {
               <span>Refreshments</span>
             </TabsTrigger>
           </TabsList>
-        </Tabs>
-      </div>
-      
-      {['all', 'coffee', 'tea', 'smoothie', 'refreshment'].map(category => (
-        <TabsContent key={category} value={category}>
-          {(() => {
-            const filteredProducts = filterProductsBySearch(filterProductsByCategory(category));
-            
-            return filteredProducts.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredProducts.map(product => (
-                  <div key={product.id} className="coffee-card overflow-hidden border rounded-lg shadow-sm">
-                    <div 
-                      className="h-48 bg-center bg-cover" 
-                      style={{ backgroundImage: `url(${product.image})` }}
-                    ></div>
-                    <div className="p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-lg font-bold">{product.name}</h3>
-                        <div className="flex items-center text-sm">
-                          {getCategoryIcon(product.category)}
+          
+          {['all', 'coffee', 'tea', 'smoothie', 'refreshment'].map(category => (
+            <TabsContent key={category} value={category}>
+              {(() => {
+                const filteredProducts = filterProductsBySearch(filterProductsByCategory(category));
+                
+                return filteredProducts.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {filteredProducts.map(product => (
+                      <div key={product.id} className="coffee-card overflow-hidden border rounded-lg shadow-sm">
+                        <div 
+                          className="h-48 bg-center bg-cover" 
+                          style={{ backgroundImage: `url(${product.image})` }}
+                        ></div>
+                        <div className="p-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <h3 className="text-lg font-bold">{product.name}</h3>
+                            <div className="flex items-center text-sm">
+                              {getCategoryIcon(product.category)}
+                            </div>
+                          </div>
+                          <p className="text-sm text-muted-foreground mb-2">{product.description}</p>
+                          <div className="flex justify-between items-center">
+                            <div className="font-semibold">${product.basePrice.toFixed(2)}</div>
+                            <Button 
+                              onClick={() => handleSelectProduct(product)}
+                              className="bg-coffee-rich hover:bg-coffee-rich/90"
+                            >
+                              Add to Cart
+                            </Button>
+                          </div>
                         </div>
                       </div>
-                      <p className="text-sm text-muted-foreground mb-2">{product.description}</p>
-                      <div className="flex justify-between items-center">
-                        <div className="font-semibold">${product.basePrice.toFixed(2)}</div>
-                        <Button 
-                          onClick={() => handleSelectProduct(product)}
-                          className="bg-coffee-rich hover:bg-coffee-rich/90"
-                        >
-                          Add to Cart
-                        </Button>
-                      </div>
-                    </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground">No items found matching "{searchQuery}"</p>
-                <Button 
-                  variant="outline" 
-                  onClick={() => setSearchQuery('')}
-                  className="mt-2"
-                >
-                  Clear search
-                </Button>
-              </div>
-            );
-          })()}
-        </TabsContent>
-      ))}
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">No items found matching "{searchQuery}"</p>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setSearchQuery('')}
+                      className="mt-2"
+                    >
+                      Clear search
+                    </Button>
+                  </div>
+                );
+              })()}
+            </TabsContent>
+          ))}
+        </Tabs>
+      </div>
       
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
