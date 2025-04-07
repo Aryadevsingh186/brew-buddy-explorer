@@ -52,46 +52,6 @@ export const supabase = createClient<Database>(
       persistSession: true,
       autoRefreshToken: true,
       storage: localStorage
-    },
-    db: {
-      schema: {
-        public: {
-          Tables: {
-            coffees: {
-              Row: {
-                id: string,
-                name: string,
-                description: string | null,
-                price: number,
-                image_url: string | null,
-                created_at: string | null,
-                category: string | null, 
-                tags: Array<string> | null
-              },
-              Insert: {
-                id?: string,
-                name: string,
-                description?: string | null,
-                price: number,
-                image_url?: string | null,
-                created_at?: string | null,
-                category?: string | null,
-                tags?: Array<string> | null
-              },
-              Update: {
-                id?: string,
-                name?: string,
-                description?: string | null,
-                price?: number,
-                image_url?: string | null,
-                created_at?: string | null,
-                category?: string | null,
-                tags?: Array<string> | null
-              }
-            }
-          }
-        }
-      }
     }
   }
 );
