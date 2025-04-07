@@ -43,48 +43,8 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-// Define a custom type that extends the generated Database type to include the coffees table
-type CustomDatabase = Database & {
-  public: {
-    Tables: {
-      coffees: {
-        Row: {
-          id: string;
-          name: string;
-          description: string;
-          price: number;
-          image_url?: string | null;
-          created_at?: string | null;
-          category?: string;
-          tags?: string[];
-        };
-        Insert: {
-          id?: string;
-          name: string;
-          description: string;
-          price: number;
-          image_url?: string | null;
-          created_at?: string | null;
-          category?: string;
-          tags?: string[];
-        };
-        Update: {
-          id?: string;
-          name?: string;
-          description?: string;
-          price?: number;
-          image_url?: string | null;
-          created_at?: string | null;
-          category?: string;
-          tags?: string[];
-        };
-        Relationships: [];
-      };
-    } & Database['public']['Tables'];
-  } & Omit<Database['public'], 'Tables'>;
-};
-
-export const supabase = createClient<CustomDatabase>(
+// Create a SupabaseClient with custom types
+export const supabase = createClient<Database>(
   SUPABASE_URL, 
   SUPABASE_PUBLISHABLE_KEY,
   {
@@ -92,6 +52,46 @@ export const supabase = createClient<CustomDatabase>(
       persistSession: true,
       autoRefreshToken: true,
       storage: localStorage
+    },
+    db: {
+      schema: {
+        public: {
+          Tables: {
+            coffees: {
+              Row: {
+                id: string,
+                name: string,
+                description: string | null,
+                price: number,
+                image_url: string | null,
+                created_at: string | null,
+                category: string | null, 
+                tags: string[] | null
+              },
+              Insert: {
+                id?: string,
+                name: string,
+                description?: string | null,
+                price: number,
+                image_url?: string | null,
+                created_at?: string | null,
+                category?: string | null,
+                tags?: string[] | null
+              },
+              Update: {
+                id?: string,
+                name?: string,
+                description?: string | null,
+                price?: number,
+                image_url?: string | null,
+                created_at?: string | null,
+                category?: string | null,
+                tags?: string[] | null
+              }
+            }
+          }
+        }
+      }
     }
   }
 );
