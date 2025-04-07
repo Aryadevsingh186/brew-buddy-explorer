@@ -57,6 +57,33 @@ const fallbackCoffeeProducts: CoffeeProduct[] = [
     image: "https://images.unsplash.com/photo-1534778101976-62847782c213",
     tags: ["hot", "classic", "milk"],
     category: "coffee"
+  },
+  {
+    id: "3",
+    name: "Green Tea",
+    description: "Smooth and calming green tea",
+    basePrice: 3.50,
+    image: "https://images.unsplash.com/photo-1556682851-c4580c583e59",
+    tags: ["hot", "healthy"],
+    category: "tea"
+  },
+  {
+    id: "4",
+    name: "Strawberry Smoothie",
+    description: "Fresh strawberries blended with yogurt",
+    basePrice: 5.50,
+    image: "https://images.unsplash.com/photo-1505252585461-04db1eb84625",
+    tags: ["cold", "fruity"],
+    category: "smoothie"
+  },
+  {
+    id: "5",
+    name: "Lemonade",
+    description: "Sweet and tangy fresh-squeezed lemonade",
+    basePrice: 4.00,
+    image: "https://images.unsplash.com/photo-1621263764928-df1444c5e859",
+    tags: ["cold", "refreshing"],
+    category: "refreshment"
   }
 ];
 
@@ -84,21 +111,65 @@ const Menu: React.FC = () => {
         }
         
         console.log('Fetched coffee items:', data);
-        // Map database items to our CoffeeProduct interface
         return data.map(mapDatabaseCoffeeToProduct);
       } catch (err) {
         console.error('Failed to fetch coffee items:', err);
-        // Use fallback data if fetch fails
         return [];
       }
     }
   });
   
   // Create a combined list of coffee products using both database items and fallbacks
-  const coffeeProducts = (coffeeItems && coffeeItems.length > 0) 
-    ? [...coffeeItems, ...fallbackCoffeeProducts]  // Combine database items with fallbacks
-    : fallbackCoffeeProducts;  // Use only fallbacks if no database items
+  let allMenuItems: CoffeeProduct[] = [];
   
+  // If we successfully fetched items from the database, use them
+  if (coffeeItems && coffeeItems.length > 0) {
+    allMenuItems = [...coffeeItems];
+    
+    // Check if we have items for each category
+    const categories = ['coffee', 'tea', 'smoothie', 'refreshment'];
+    const existingCategories = new Set(allMenuItems.map(item => item.category));
+    
+    // For any missing categories, add the fallback items
+    fallbackCoffeeProducts.forEach(item => {
+      if (!existingCategories.has(item.category)) {
+        allMenuItems.push(item);
+      }
+    });
+  } else {
+    // If no database items, use all fallbacks
+    allMenuItems = [...fallbackCoffeeProducts];
+  }
+  
+  console.log('Menu items after combining:', allMenuItems.length);
+  console.log('Categories represented:', [...new Set(allMenuItems.map(item => item.category))]);
+  
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case 'coffee': return <Coffee className="h-4 w-4" />;
+      case 'tea': return <Leaf className="h-4 w-4" />;
+      case 'smoothie': return <Milk className="h-4 w-4" />;
+      case 'refreshment': return <CupSoda className="h-4 w-4" />;
+      default: return <Coffee className="h-4 w-4" />;
+    }
+  };
+  
+  const filterProductsByCategory = (category: string) => {
+    if (category === 'all') return allMenuItems;
+    return allMenuItems.filter(product => product.category === category);
+  };
+  
+  const filterProductsBySearch = (products: CoffeeProduct[]) => {
+    if (!searchQuery.trim()) return products;
+    
+    const query = searchQuery.toLowerCase().trim();
+    return products.filter(product => 
+      product.name.toLowerCase().includes(query) || 
+      product.description.toLowerCase().includes(query) ||
+      (product.tags && product.tags.some(tag => tag.toLowerCase().includes(query)))
+    );
+  };
+
   const handleSelectProduct = (product: CoffeeProduct) => {
     setSelectedProduct(product);
     setSelectedSize('medium');
@@ -154,35 +225,6 @@ const Menu: React.FC = () => {
     
     return finalPrice.toFixed(2);
   };
-  
-  const getCategoryIcon = (category: string) => {
-    switch (category) {
-      case 'coffee': return <Coffee className="h-4 w-4" />;
-      case 'tea': return <Leaf className="h-4 w-4" />;
-      case 'smoothie': return <Milk className="h-4 w-4" />;
-      case 'refreshment': return <CupSoda className="h-4 w-4" />;
-      default: return <Coffee className="h-4 w-4" />;
-    }
-  };
-  
-  const filterProductsByCategory = (category: string) => {
-    if (category === 'all') return coffeeProducts;
-    return coffeeProducts.filter(product => product.category === category);
-  };
-  
-  const filterProductsBySearch = (products: CoffeeProduct[]) => {
-    if (!searchQuery.trim()) return products;
-    
-    const query = searchQuery.toLowerCase().trim();
-    return products.filter(product => 
-      product.name.toLowerCase().includes(query) || 
-      product.description.toLowerCase().includes(query) ||
-      product.tags.some(tag => tag.toLowerCase().includes(query))
-    );
-  };
-
-  console.log('Total coffee products:', coffeeProducts.length);
-  console.log('Database coffee items:', coffeeItems?.length || 0);
   
   return (
     <div className="container py-6">
@@ -252,6 +294,9 @@ const Menu: React.FC = () => {
                             <h3 className="text-lg font-bold">{product.name}</h3>
                             <div className="flex items-center text-sm">
                               {getCategoryIcon(product.category)}
+                              <span className="ml-1 text-xs bg-slate-100 rounded px-2 py-0.5">
+                                {product.category}
+                              </span>
                             </div>
                           </div>
                           <p className="text-sm text-muted-foreground mb-2">{product.description}</p>

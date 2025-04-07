@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
@@ -35,6 +34,7 @@ const ManageCoffees = () => {
   });
   
   const fetchCoffees = async (): Promise<Coffee[]> => {
+    console.log('Fetching coffees from Supabase');
     const { data, error } = await supabase
       .from('coffees')
       .select('*')
@@ -45,6 +45,7 @@ const ManageCoffees = () => {
       throw error;
     }
     
+    console.log('Fetched coffees:', data);
     return data as Coffee[];
   };
   
@@ -102,20 +103,36 @@ const ManageCoffees = () => {
   
   const handleAddCoffee = async () => {
     try {
+      console.log('Adding new coffee with form data:', formData);
       const tags = prepareTags(formData.tags);
       
-      const { error } = await supabase
+      const price = parseFloat(formData.price);
+      if (isNaN(price)) {
+        throw new Error('Price must be a valid number');
+      }
+      
+      const newCoffee = {
+        name: formData.name,
+        description: formData.description,
+        price: price,
+        image_url: formData.image_url || null,
+        category: formData.category,
+        tags: tags.length > 0 ? tags : []
+      };
+      
+      console.log('Sending to Supabase:', newCoffee);
+      
+      const { error, data } = await supabase
         .from('coffees')
-        .insert({
-          name: formData.name,
-          description: formData.description,
-          price: parseFloat(formData.price),
-          image_url: formData.image_url || null,
-          category: formData.category,
-          tags: tags.length > 0 ? tags : null
-        });
+        .insert(newCoffee)
+        .select();
         
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+      
+      console.log('Coffee added successfully:', data);
       
       toast({
         title: "Coffee added",
@@ -125,6 +142,7 @@ const ManageCoffees = () => {
       refetch();
       setIsAddDialogOpen(false);
     } catch (error: any) {
+      console.error('Error adding coffee:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to add coffee",
@@ -147,7 +165,7 @@ const ManageCoffees = () => {
           price: parseFloat(formData.price),
           image_url: formData.image_url || null,
           category: formData.category,
-          tags: tags.length > 0 ? tags : null
+          tags: tags.length > 0 ? tags : []
         })
         .eq('id', selectedCoffee.id);
         
@@ -196,7 +214,6 @@ const ManageCoffees = () => {
     }
   };
 
-  // Function to add sample coffees
   const addSampleCoffees = async () => {
     try {
       const sampleCoffees = [
