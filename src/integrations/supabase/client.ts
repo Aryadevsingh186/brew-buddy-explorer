@@ -55,6 +55,8 @@ type CustomDatabase = Database & {
           price: number;
           image_url?: string | null;
           created_at?: string | null;
+          category?: string;
+          tags?: string[];
         };
         Insert: {
           id?: string;
@@ -63,6 +65,8 @@ type CustomDatabase = Database & {
           price: number;
           image_url?: string | null;
           created_at?: string | null;
+          category?: string;
+          tags?: string[];
         };
         Update: {
           id?: string;
@@ -71,6 +75,8 @@ type CustomDatabase = Database & {
           price?: number;
           image_url?: string | null;
           created_at?: string | null;
+          category?: string;
+          tags?: string[];
         };
         Relationships: [];
       };
