@@ -66,7 +66,7 @@ export const supabase = createClient<Database>(
                 image_url: string | null,
                 created_at: string | null,
                 category: string | null, 
-                tags: string[] | null
+                tags: Array<string> | null
               },
               Insert: {
                 id?: string,
@@ -76,7 +76,7 @@ export const supabase = createClient<Database>(
                 image_url?: string | null,
                 created_at?: string | null,
                 category?: string | null,
-                tags?: string[] | null
+                tags?: Array<string> | null
               },
               Update: {
                 id?: string,
@@ -86,7 +86,7 @@ export const supabase = createClient<Database>(
                 image_url?: string | null,
                 created_at?: string | null,
                 category?: string | null,
-                tags?: string[] | null
+                tags?: Array<string> | null
               }
             }
           }
