@@ -10,7 +10,6 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
     strictPort: true,
-    // Add headers for proper MIME types
     headers: {
       'Content-Type': 'application/javascript',
     },
