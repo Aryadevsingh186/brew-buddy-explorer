@@ -6,13 +6,14 @@ const config: CapacitorConfig = {
   appName: 'brew-buddy-explorer',
   webDir: 'dist',
   server: {
-    url: 'https://fd44018b-a91c-479b-8adb-49cb440dffbf.lovableproject.com?forceHideBadge=true',
+    url: 'http://localhost:8080',
     cleartext: true
   },
   android: {
     buildOptions: {
       keystorePath: null,
       keystoreAlias: null,
+      javaVersion: "17" // Set specific Java version
     }
   },
   ios: {

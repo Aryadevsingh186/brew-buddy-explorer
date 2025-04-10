@@ -19,7 +19,7 @@ const AppLayout: React.FC = () => {
       <Header isAdmin={isAdmin} />
       
       {/* Main content */}
-      <main className="flex-1">
+      <main className="flex-1 container pb-20 md:pb-6 pt-4">
         <Outlet />
       </main>
       

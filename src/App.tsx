@@ -37,8 +37,6 @@ const App = () => (
       <AuthProvider>
         <CartProvider>
           <TooltipProvider>
-            <Toaster />
-            <Sonner />
             <Routes>
               {/* Auth routes */}
               <Route element={<AuthLayout />}>
@@ -65,6 +63,8 @@ const App = () => (
               {/* Catch-all */}
               <Route path="*" element={<NotFound />} />
             </Routes>
+            <Toaster />
+            <Sonner />
           </TooltipProvider>
         </CartProvider>
       </AuthProvider>

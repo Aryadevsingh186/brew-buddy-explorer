@@ -17,7 +17,7 @@ const MobileBottomNav: React.FC = () => {
   const isActive = (path: string) => location.pathname === path;
   
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 border-t bg-background z-40">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 border-t bg-background z-40">
       <div className="grid grid-cols-5 h-16">
         {navItems.map((item) => (
           <Link
@@ -34,7 +34,7 @@ const MobileBottomNav: React.FC = () => {
           </Link>
         ))}
       </div>
-    </div>
+    </nav>
   );
 };
 
