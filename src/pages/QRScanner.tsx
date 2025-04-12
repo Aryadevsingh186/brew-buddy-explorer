@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Camera, X, Check, RefreshCw } from 'lucide-react';
 import { toast } from "@/components/ui/use-toast";
 import { useAuth } from '@/contexts/AuthContext';
+import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 
 const QRScanner: React.FC = () => {
   const { user } = useAuth();
@@ -13,33 +15,67 @@ const QRScanner: React.FC = () => {
   
   const startScanning = async () => {
     try {
-      setHasCameraPermission(true);
-      setScanning(true);
+      // Request camera permissions
+      const permissionStatus = await CapacitorCamera.requestPermissions();
       
-      setTimeout(() => {
-        const codes = [
-          'REWARD50',
-          'FREECOFFEE',
-          'DISCOUNT20',
-          'LOYALTYPOINTS'
-        ];
+      if (permissionStatus.camera === 'granted') {
+        setHasCameraPermission(true);
+        setScanning(true);
         
-        const randomCode = codes[Math.floor(Math.random() * codes.length)];
-        setScannedCode(randomCode);
+        try {
+          // Open the camera to scan QR code
+          const image = await CapacitorCamera.getPhoto({
+            quality: 90,
+            allowEditing: false,
+            resultType: CameraResultType.Uri,
+            source: CameraSource.Camera,
+            promptLabelHeader: 'Scan QR Code',
+            promptLabelCancel: 'Cancel',
+          });
+          
+          // In a real app, we would process the image to extract QR code
+          // For this demo, we'll simulate finding a code
+          const codes = [
+            'REWARD50',
+            'FREECOFFEE',
+            'DISCOUNT20',
+            'LOYALTYPOINTS'
+          ];
+          
+          const randomCode = codes[Math.floor(Math.random() * codes.length)];
+          setScannedCode(randomCode);
+          
+          toast({
+            title: "QR Code Scanned",
+            description: `Successfully scanned code: ${randomCode}`,
+          });
+        } catch (err) {
+          console.error('Camera error:', err);
+          toast({
+            title: "Scanning Cancelled",
+            description: "QR code scanning was cancelled",
+          });
+        }
+        
         setScanning(false);
-        
+      } else {
+        setHasCameraPermission(false);
         toast({
-          title: "QR Code Scanned",
-          description: `Successfully scanned code: ${randomCode}`,
+          title: "Permission Denied",
+          description: "Camera permission is required to scan QR codes",
+          variant: "destructive",
         });
-      }, 3000);
+        setScanning(false);
+      }
     } catch (error) {
+      console.error('Permission error:', error);
       setHasCameraPermission(false);
       toast({
         title: "Camera Error",
         description: "Unable to access camera. Please allow camera permissions.",
         variant: "destructive",
       });
+      setScanning(false);
     }
   };
   
