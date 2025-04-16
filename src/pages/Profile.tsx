@@ -22,6 +22,7 @@ const Profile: React.FC = () => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [avatarStatus, setAvatarStatus] = useState<"loading" | "loaded" | "error" | null>(null);
   
   useEffect(() => {
     if (user?.id) {
@@ -30,6 +31,12 @@ const Profile: React.FC = () => {
       setAvatarUrl(user.avatar_url || null);
     }
   }, [user]);
+
+  useEffect(() => {
+    if (avatarUrl) {
+      setAvatarStatus("loading");
+    }
+  }, [avatarUrl]);
   
   async function uploadAvatar(event: React.ChangeEvent<HTMLInputElement>) {
     try {
@@ -81,9 +88,12 @@ const Profile: React.FC = () => {
       console.log("Upload successful:", data);
       
       const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(fileName);
-      const avatarUrl = urlData.publicUrl;
+      let avatarUrl = urlData.publicUrl;
       
-      console.log("File uploaded, public URL:", avatarUrl);
+      // Add a cache buster to prevent browser caching
+      avatarUrl = `${avatarUrl}?t=${new Date().getTime()}`;
+      
+      console.log("File uploaded, public URL with cache buster:", avatarUrl);
       
       await updateProfile({ avatar_url: avatarUrl });
       setAvatarUrl(avatarUrl);
@@ -113,7 +123,7 @@ const Profile: React.FC = () => {
       if (!avatarUrl) return;
       
       // Try to extract the file path from the URL
-      const filePathMatch = avatarUrl.match(/avatars\/(.+)$/);
+      const filePathMatch = avatarUrl.match(/avatars\/(.+)(\?t=\d+)?$/);
       if (filePathMatch && filePathMatch[1]) {
         const filePath = filePathMatch[1];
         
@@ -137,6 +147,7 @@ const Profile: React.FC = () => {
       // Update the profile regardless of file removal success
       await updateProfile({ avatar_url: null });
       setAvatarUrl(null);
+      setAvatarStatus(null);
       
       toast({
         title: "Avatar removed",
@@ -153,6 +164,21 @@ const Profile: React.FC = () => {
     }
   }
   
+  const handleLoadingStatusChange = (status: "loading" | "loaded" | "error") => {
+    console.log("Avatar loading status:", status);
+    setAvatarStatus(status);
+    
+    if (status === "error" && avatarUrl) {
+      console.log("Avatar failed to load, adding cache buster and retrying");
+      // If there was an error loading the image and it wasn't already a cache-busted URL,
+      // try adding a cache buster
+      if (!avatarUrl.includes("?t=")) {
+        const newUrl = `${avatarUrl}?t=${new Date().getTime()}`;
+        setAvatarUrl(newUrl);
+      }
+    }
+  };
+
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsUpdating(true);
@@ -256,16 +282,18 @@ const Profile: React.FC = () => {
                 <div className="w-24 h-24 mb-4 relative group">
                   <Avatar className="w-24 h-24 border-2 border-muted">
                     {avatarUrl ? (
-                      <AvatarImage 
-                        src={avatarUrl} 
-                        alt={user?.name || 'User'} 
-                        onError={(e) => {
-                          console.error("Error loading avatar image:", e);
-                          const target = e.target as HTMLImageElement;
-                          target.onerror = null;
-                          target.src = ''; // Clear src to show fallback
-                        }}
-                      />
+                      <>
+                        <AvatarImage 
+                          src={avatarUrl} 
+                          alt={user?.name || 'User'} 
+                          onLoadingStatusChange={handleLoadingStatusChange}
+                        />
+                        {avatarStatus === "error" && (
+                          <AvatarFallback className="bg-coffee-mocha/20 text-coffee-mocha">
+                            <User className="h-12 w-12" />
+                          </AvatarFallback>
+                        )}
+                      </>
                     ) : (
                       <AvatarFallback className="bg-coffee-mocha/20 text-coffee-mocha">
                         <User className="h-12 w-12" />

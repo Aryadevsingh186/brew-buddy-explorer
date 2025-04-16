@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import * as AvatarPrimitive from "@radix-ui/react-avatar"
 
@@ -20,14 +21,27 @@ Avatar.displayName = AvatarPrimitive.Root.displayName
 
 const AvatarImage = React.forwardRef<
   React.ElementRef<typeof AvatarPrimitive.Image>,
-  React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Image>
->(({ className, ...props }, ref) => (
-  <AvatarPrimitive.Image
-    ref={ref}
-    className={cn("aspect-square h-full w-full", className)}
-    {...props}
-  />
-))
+  React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Image> & { onLoadingStatusChange?: (status: "loading" | "loaded" | "error") => void }
+>(({ className, onLoadingStatusChange, ...props }, ref) => {
+  const handleLoad = React.useCallback(() => {
+    onLoadingStatusChange?.("loaded");
+  }, [onLoadingStatusChange]);
+
+  const handleError = React.useCallback(() => {
+    console.error("Avatar image failed to load:", props.src);
+    onLoadingStatusChange?.("error");
+  }, [onLoadingStatusChange, props.src]);
+
+  return (
+    <AvatarPrimitive.Image
+      ref={ref}
+      className={cn("aspect-square h-full w-full", className)}
+      onLoad={handleLoad}
+      onError={handleError}
+      {...props}
+    />
+  )
+})
 AvatarImage.displayName = AvatarPrimitive.Image.displayName
 
 const AvatarFallback = React.forwardRef<
