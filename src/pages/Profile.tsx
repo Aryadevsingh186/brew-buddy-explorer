@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -246,14 +245,14 @@ const Profile: React.FC = () => {
   ];
   
   return (
-    <div className="container py-6">
-      <h1 className="text-3xl font-bold mb-6">My Profile</h1>
+    <div className="container py-6 max-w-full px-4 md:px-6">
+      <h1 className="text-2xl md:text-3xl font-bold mb-6 truncate">My Profile</h1>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-1">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex flex-col items-center text-center">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 overflow-x-hidden">
+        <div className="md:col-span-1 w-full">
+          <Card className="w-full overflow-hidden">
+            <CardContent className="pt-6 px-4 sm:px-6">
+              <div className="flex flex-col items-center text-center w-full overflow-hidden">
                 <div className="w-24 h-24 mb-4 relative group">
                   <Avatar className="w-24 h-24 border-2 border-muted">
                     {avatarUrl ? (
@@ -304,8 +303,8 @@ const Profile: React.FC = () => {
                   </Button>
                 )}
                 
-                <h2 className="text-xl font-bold">{user?.name}</h2>
-                <p className="text-muted-foreground">{user?.email}</p>
+                <h2 className="text-xl font-bold truncate max-w-full">{user?.name}</h2>
+                <p className="text-muted-foreground truncate max-w-full">{user?.email}</p>
                 
                 <div className="mt-2 bg-coffee-rich/10 px-4 py-2 rounded-full">
                   <div className="flex items-center gap-1">
@@ -361,17 +360,17 @@ const Profile: React.FC = () => {
           </Card>
         </div>
         
-        <div className="md:col-span-2">
-          <Tabs defaultValue="account">
-            <TabsList className="mb-4">
-              <TabsTrigger value="account">Account</TabsTrigger>
-              <TabsTrigger value="orders">Orders</TabsTrigger>
-              <TabsTrigger value="rewards">Rewards</TabsTrigger>
-              <TabsTrigger value="settings">Settings</TabsTrigger>
+        <div className="md:col-span-2 w-full overflow-x-auto">
+          <Tabs defaultValue="account" className="w-full">
+            <TabsList className="mb-4 w-full overflow-x-auto">
+              <TabsTrigger value="account" className="flex-1">Account</TabsTrigger>
+              <TabsTrigger value="orders" className="flex-1">Orders</TabsTrigger>
+              <TabsTrigger value="rewards" className="flex-1">Rewards</TabsTrigger>
+              <TabsTrigger value="settings" className="flex-1">Settings</TabsTrigger>
             </TabsList>
             
-            <TabsContent value="account">
-              <Card>
+            <TabsContent value="account" className="w-full overflow-x-auto">
+              <Card className="w-full">
                 <CardHeader>
                   <CardTitle>Account Information</CardTitle>
                   <CardDescription>
@@ -379,18 +378,19 @@ const Profile: React.FC = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <form onSubmit={handleUpdateProfile} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="username">Name</Label>
+                  <form onSubmit={handleUpdateProfile} className="space-y-4 w-full">
+                    <div className="space-y-2 w-full">
+                      <Label htmlFor="username" className="w-full">Name</Label>
                       <Input 
                         id="username" 
                         placeholder="Your name" 
+                        className="w-full truncate" 
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
                       />
                     </div>
                     
-                    <div className="space-y-2">
+                    <div className="space-y-2 w-full">
                       <Label htmlFor="email">Email</Label>
                       <Input 
                         id="email" 
@@ -402,7 +402,7 @@ const Profile: React.FC = () => {
                       />
                     </div>
                     
-                    <div className="space-y-2">
+                    <div className="space-y-2 w-full">
                       <Label htmlFor="phone">Phone Number</Label>
                       <Input id="phone" placeholder="Your phone number" />
                     </div>
@@ -426,8 +426,8 @@ const Profile: React.FC = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <form onSubmit={handleChangePassword} className="space-y-4">
-                    <div className="space-y-2">
+                  <form onSubmit={handleChangePassword} className="space-y-4 w-full">
+                    <div className="space-y-2 w-full">
                       <Label htmlFor="currentPassword">Current Password</Label>
                       <Input 
                         id="currentPassword" 
@@ -438,7 +438,7 @@ const Profile: React.FC = () => {
                       />
                     </div>
                     
-                    <div className="space-y-2">
+                    <div className="space-y-2 w-full">
                       <Label htmlFor="newPassword">New Password</Label>
                       <Input 
                         id="newPassword" 
@@ -449,7 +449,7 @@ const Profile: React.FC = () => {
                       />
                     </div>
                     
-                    <div className="space-y-2">
+                    <div className="space-y-2 w-full">
                       <Label htmlFor="confirmPassword">Confirm New Password</Label>
                       <Input 
                         id="confirmPassword" 
