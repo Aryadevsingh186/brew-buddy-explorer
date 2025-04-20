@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,7 +13,7 @@ export default function LoginScreen() {
   const handleLogin = () => {
     // This would normally connect to your authentication service
     console.log('Login with', email, password);
-    navigation.navigate('Main');
+    navigation.navigate('Main' as never);
   };
 
   return (
@@ -105,7 +104,7 @@ export default function LoginScreen() {
         
         <View style={styles.signupContainer}>
           <Text style={styles.signupText}>Don't have an account?</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+          <TouchableOpacity onPress={() => navigation.navigate('Register' as never)}>
             <Text style={styles.signupLink}>Sign Up</Text>
           </TouchableOpacity>
         </View>

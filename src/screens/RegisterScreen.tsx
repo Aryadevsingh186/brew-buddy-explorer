@@ -17,7 +17,7 @@ export default function RegisterScreen() {
   const handleRegister = () => {
     // This would normally create a new account
     console.log('Register with', name, email, password);
-    navigation.navigate('Main');
+    navigation.navigate('Main' as never);
   };
   
   return (
@@ -116,7 +116,7 @@ export default function RegisterScreen() {
         
         <View style={styles.loginContainer}>
           <Text style={styles.loginText}>Already have an account?</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+          <TouchableOpacity onPress={() => navigation.navigate('Login' as never)}>
             <Text style={styles.loginLink}>Sign In</Text>
           </TouchableOpacity>
         </View>

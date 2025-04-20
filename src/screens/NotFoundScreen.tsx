@@ -18,7 +18,7 @@ export default function NotFoundScreen() {
         </Text>
         <TouchableOpacity 
           style={styles.button}
-          onPress={() => navigation.navigate('Main')}
+          onPress={() => navigation.navigate('Main' as never)}
         >
           <Text style={styles.buttonText}>Go to Home</Text>
         </TouchableOpacity>

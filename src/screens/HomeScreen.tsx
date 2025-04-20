@@ -31,7 +31,7 @@ export default function HomeScreen() {
           </View>
           <TouchableOpacity 
             style={styles.scanButton}
-            onPress={() => navigation.navigate('QRScanner')}
+            onPress={() => navigation.navigate('QRScanner' as never)}
           >
             <Feather name="maximize" size={20} color="#fff" />
           </TouchableOpacity>
@@ -50,7 +50,7 @@ export default function HomeScreen() {
             </View>
             <TouchableOpacity 
               style={styles.orderButton}
-              onPress={() => navigation.navigate('Menu')}
+              onPress={() => navigation.navigate('Menu' as never)}
             >
               <Text style={styles.orderButtonText}>Order Now</Text>
             </TouchableOpacity>
@@ -61,7 +61,7 @@ export default function HomeScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Popular Drinks</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Menu')}>
+            <TouchableOpacity onPress={() => navigation.navigate('Menu' as never)}>
               <Text style={styles.seeAllText}>See All</Text>
             </TouchableOpacity>
           </View>
@@ -102,7 +102,7 @@ export default function HomeScreen() {
           
           <TouchableOpacity 
             style={styles.locationCard}
-            onPress={() => navigation.navigate('Locations')}
+            onPress={() => navigation.navigate('Locations' as never)}
           >
             <View style={styles.locationInfo}>
               <Text style={styles.locationName}>Downtown Brew Buddy</Text>

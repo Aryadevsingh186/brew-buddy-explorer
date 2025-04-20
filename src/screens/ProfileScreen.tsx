@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { StyleSheet, View, Text, ScrollView, TouchableOpacity, Image, Switch, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -45,7 +44,7 @@ export default function ProfileScreen() {
         { text: 'Cancel', style: 'cancel' },
         { text: 'Log Out', onPress: () => {
           logout();
-          navigation.navigate('Auth');
+          navigation.navigate('Auth' as never);
         }}
       ]
     );
@@ -96,7 +95,7 @@ export default function ProfileScreen() {
               onPress={item.onPress}
             >
               <View style={styles.menuItemLeft}>
-                <Feather name={item.icon} size={20} color="#666" style={styles.menuItemIcon} />
+                <Feather name={item.icon as any} size={20} color="#666" style={styles.menuItemIcon} />
                 <Text style={styles.menuItemText}>{item.label}</Text>
               </View>
               <Feather name="chevron-right" size={20} color="#CCC" />
@@ -115,7 +114,7 @@ export default function ProfileScreen() {
               onPress={item.onPress}
             >
               <View style={styles.menuItemLeft}>
-                <Feather name={item.icon} size={20} color="#666" style={styles.menuItemIcon} />
+                <Feather name={item.icon as any} size={20} color="#666" style={styles.menuItemIcon} />
                 <Text style={styles.menuItemText}>{item.label}</Text>
               </View>
               <Feather name="chevron-right" size={20} color="#CCC" />
