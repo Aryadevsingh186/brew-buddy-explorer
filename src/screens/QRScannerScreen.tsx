@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
-import { Camera } from 'expo-camera';
+import { Camera, CameraType } from 'expo-camera';
 import { useNavigation } from '@react-navigation/native';
 
 export default function QRScannerScreen() {
@@ -112,7 +111,7 @@ export default function QRScannerScreen() {
         <View style={styles.cameraContainer}>
           <Camera
             style={styles.camera}
-            type={Camera.Constants.Type.back as any}
+            type={CameraType.back}
             onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
           >
             <View style={styles.overlay}>
