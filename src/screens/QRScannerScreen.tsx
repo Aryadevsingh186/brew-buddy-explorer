@@ -112,7 +112,7 @@ export default function QRScannerScreen() {
         <View style={styles.cameraContainer}>
           <Camera
             style={styles.camera}
-            type={Camera.Constants.Type.back}
+            type={Camera.Constants.Type.back as any}
             onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
           >
             <View style={styles.overlay}>

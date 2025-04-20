@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { StyleSheet, View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -32,7 +33,7 @@ const mockDeliveryOptions = [
 
 export default function OrderScreen() {
   const navigation = useNavigation();
-  const { cart, total } = useCart();
+  const { items: cart, subtotal: total } = useCart();
   
   const handleSelectDeliveryOption = (optionId: string) => {
     console.log('Selected delivery option:', optionId);
@@ -48,7 +49,7 @@ export default function OrderScreen() {
         ) : (
           <View>
             {cart.map(item => (
-              <OrderItem key={item.id} item={item} />
+              <OrderItem key={item.id} item={item as unknown as MenuItem} />
             ))}
             
             <View style={styles.summary}>
@@ -208,3 +209,4 @@ const styles = StyleSheet.create({
     color: '#8B5A2B',
   },
 });
+
