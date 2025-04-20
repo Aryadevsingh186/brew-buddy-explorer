@@ -13,136 +13,77 @@ import { Coffee, Sparkles, CupSoda, Leaf, Milk, Search, Loader2 } from 'lucide-r
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import { Coffee as CoffeeType } from '@/types/coffee';
+import { api } from '@/services/api';
+import { MenuItem } from '@/types';
 
-// Types
-interface CoffeeProduct {
-  id: string;
-  name: string;
-  description: string;
-  basePrice: number;
-  image: string;
-  tags: string[];
-  category: string;
-}
-
-// Convert database coffee to CoffeeProduct
-const mapDatabaseCoffeeToProduct = (coffee: CoffeeType): CoffeeProduct => {
+const mapDatabaseCoffeeToProduct = (coffee: CoffeeType): MenuItem => {
   return {
     id: coffee.id,
     name: coffee.name,
     description: coffee.description || '',
     basePrice: coffee.price,
-    image: coffee.image_url || 'https://images.unsplash.com/photo-1611854779393-1b2da9d400fe', // Default image if none provided
+    image: coffee.image_url || 'https://images.unsplash.com/photo-1611854779393-1b2da9d400fe',
     tags: coffee.tags || ['coffee'],
     category: coffee.category || 'coffee'
   };
 };
 
-// Fallback coffee products in case fetching fails
-const fallbackCoffeeProducts: CoffeeProduct[] = [
-  {
-    id: "1",
-    name: "Espresso",
-    description: "Rich and bold single shot of espresso",
-    basePrice: 2.99,
-    image: "https://images.unsplash.com/photo-1611854779393-1b2da9d400fe",
-    tags: ["hot", "classic"],
-    category: "coffee"
-  },
-  {
-    id: "2",
-    name: "Cappuccino",
-    description: "Espresso with steamed milk and thick foam",
-    basePrice: 4.50,
-    image: "https://images.unsplash.com/photo-1534778101976-62847782c213",
-    tags: ["hot", "classic", "milk"],
-    category: "coffee"
-  },
-  {
-    id: "3",
-    name: "Green Tea",
-    description: "Smooth and calming green tea",
-    basePrice: 3.50,
-    image: "https://images.unsplash.com/photo-1556682851-c4580c583e59",
-    tags: ["hot", "healthy"],
-    category: "tea"
-  },
-  {
-    id: "4",
-    name: "Strawberry Smoothie",
-    description: "Fresh strawberries blended with yogurt",
-    basePrice: 5.50,
-    image: "https://images.unsplash.com/photo-1505252585461-04db1eb84625",
-    tags: ["cold", "fruity"],
-    category: "smoothie"
-  },
-  {
-    id: "5",
-    name: "Lemonade",
-    description: "Sweet and tangy fresh-squeezed lemonade",
-    basePrice: 4.00,
-    image: "https://images.unsplash.com/photo-1621263764928-df1444c5e859",
-    tags: ["cold", "refreshing"],
-    category: "refreshment"
-  }
-];
-
 const Menu: React.FC = () => {
   const { addItem } = useCart();
-  const [selectedProduct, setSelectedProduct] = useState<CoffeeProduct | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<MenuItem | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedSize, setSelectedSize] = useState<'small' | 'medium' | 'large'>('medium');
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('all');
   
-  // Fetch coffees from Supabase
   const { data: coffeeItems, isLoading, error } = useQuery({
     queryKey: ['menuItems'],
     queryFn: async () => {
       try {
-        const { data, error } = await supabase
+        const { data: supabaseData, error } = await supabase
           .from('coffees')
           .select('*');
         
         if (error) {
-          console.error('Error fetching coffee items:', error);
+          console.error('Error fetching coffee items from Supabase:', error);
           throw error;
         }
         
-        console.log('Fetched coffee items:', data);
-        return data.map(mapDatabaseCoffeeToProduct);
+        const apiMenuItems = await api.getMenu();
+        
+        const supabaseItems = supabaseData.map(mapDatabaseCoffeeToProduct);
+        
+        console.log('Fetched items from Supabase:', supabaseItems.length);
+        console.log('Fetched items from API:', apiMenuItems.length);
+        
+        const allItems = [...supabaseItems];
+        const existingIds = new Set(allItems.map(item => item.id));
+        
+        apiMenuItems.forEach(item => {
+          if (!existingIds.has(item.id)) {
+            allItems.push(item);
+            existingIds.add(item.id);
+          }
+        });
+        
+        return allItems;
       } catch (err) {
-        console.error('Failed to fetch coffee items:', err);
-        return [];
+        console.error('Failed to fetch menu items:', err);
+        try {
+          return await api.getMenu();
+        } catch (apiErr) {
+          console.error('API fetch also failed:', apiErr);
+          return [];
+        }
       }
     }
   });
   
-  // Create a combined list of coffee products using both database items and fallbacks
-  let allMenuItems: CoffeeProduct[] = [];
+  const allMenuItems = coffeeItems || [];
   
-  // If we successfully fetched items from the database, use them
-  if (coffeeItems && coffeeItems.length > 0) {
-    allMenuItems = [...coffeeItems];
-    
-    // Check if we have items for each category
-    const categories = ['coffee', 'tea', 'smoothie', 'refreshment'];
-    const existingCategories = new Set(allMenuItems.map(item => item.category));
-    
-    // For any missing categories, add the fallback items
-    fallbackCoffeeProducts.forEach(item => {
-      if (!existingCategories.has(item.category)) {
-        allMenuItems.push(item);
-      }
-    });
-  } else {
-    // If no database items, use all fallbacks
-    allMenuItems = [...fallbackCoffeeProducts];
-  }
-  
-  console.log('Menu items after combining:', allMenuItems.length);
-  console.log('Categories represented:', [...new Set(allMenuItems.map(item => item.category))]);
+  console.log('Menu items total:', allMenuItems.length);
+  console.log('Categories represented:', [...new Set(allMenuItems.map(item => item.category || 'unknown'))]);
   
   const getCategoryIcon = (category: string) => {
     switch (category) {
@@ -159,18 +100,18 @@ const Menu: React.FC = () => {
     return allMenuItems.filter(product => product.category === category);
   };
   
-  const filterProductsBySearch = (products: CoffeeProduct[]) => {
+  const filterProductsBySearch = (products: MenuItem[]) => {
     if (!searchQuery.trim()) return products;
     
     const query = searchQuery.toLowerCase().trim();
     return products.filter(product => 
       product.name.toLowerCase().includes(query) || 
-      product.description.toLowerCase().includes(query) ||
+      (product.description && product.description.toLowerCase().includes(query)) ||
       (product.tags && product.tags.some(tag => tag.toLowerCase().includes(query)))
     );
   };
 
-  const handleSelectProduct = (product: CoffeeProduct) => {
+  const handleSelectProduct = (product: MenuItem) => {
     setSelectedProduct(product);
     setSelectedSize('medium');
     setSelectedOptions([]);

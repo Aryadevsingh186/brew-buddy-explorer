@@ -4,6 +4,9 @@ export interface MenuItem {
   name: string;
   basePrice: number;
   image: string;
+  description?: string;
+  tags?: string[];
+  category?: string;
 }
 
 // Re-export the coffee type for convenience
